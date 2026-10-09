@@ -60,8 +60,11 @@ git log --oneline <default>..HEAD  # is it split by reason
 | **silent rejections** | Something discarded with nothing counted (⚠ indistinguishable from something that never arrived) |
 | **internal state shown to a human** | A raw enum, an errno, or a status code reaching output |
 
-> ⚠ **FILL IN.** Add the rows this project's own rules produce, and name the rule file each
-> comes from. ⚠ **Never restate a rule's text here** — a row says what to look at and how it fails.
+| **a score sneaking in** (`docs/adr/0002`) | A weight, a threshold, or a number that decides the verdict instead of which checks are missing |
+| **a check with no "why"** (`docs/adr/0002`) | A `CheckResult` with empty evidence, or a `missing` result with no decision |
+| **the core reaching out** (`docs/adr/0003`) | I/O or an import from `github/` / `web/` inside `src/core/` |
+| **IssueReady acting on an issue** (`docs/adr/0001`) | Any write call to GitHub, a label, a comment, a PR |
+| **the first screen growing** (`docs/adr/0004`) | Anything beyond the verdict and the decisions shown before "詳細を見る" |
 
 ---
 

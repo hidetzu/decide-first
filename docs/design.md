@@ -1,0 +1,89 @@
+# IssueReady 設計
+
+⚠ **これは計画であり、主張ではない。** 実装済みで主張してよいものは [`SPEC.md`](SPEC.md) に、判断の理由は [`adr/`](adr/) に置く。調査結果と出典は [`research.md`](research.md)。
+
+## 1. 一文での定義
+
+> **IssueReady は、GitHub Issue 1 件を AI Coding Agent へ今渡してよいかを判定し、渡す前に人間が決めることだけを短く示す Quality Gate である。**
+
+## 2. 評価モデル
+
+### 判定（3 値。⚠ 点数は出さない）
+
+| 判定 | 意味 | 導き方 |
+|---|---|---|
+| 🟢 READY | 人間が決めることが見つからない | blocking な check がすべて met |
+| 🟡 NEEDS CLARIFICATION | 人間がいくつか決めれば渡せる | blocking な check のどれかが missing |
+| 🔴 NOT READY | 答えを足すだけでは足りず、Issue の作り直し（分割・書き直し）か、人間の仕事にする判断が要る | 構造的な check のどれかが該当（**未実装**） |
+
+- 各 check の結果は `met` か `missing` で、必ず **evidence**（見つけた行、または探したもの）を持つ。
+- `missing` の check は **decision**（人間が決めること）を 1 つ持つ。
+- 画面に出す「人間が決めること」は decision の並びそのものになる。
+- ⚠ 判定は「どの check が missing か」だけから決まる（[ADR 0002](adr/0002-the-verdict-is-derived-from-named-rule-checks-never-a-score.md)）。
+
+### Check の一覧
+
+| Check | 種別 | 状態 | 根拠 |
+|---|---|---|---|
+| Acceptance criteria — 中身のある見出し、または task list | blocking | ✅ slice | Copilot docs、Sayagh "expected behaviors" |
+| Verification — 確認方法・再現手順の見出し | blocking | ✅ slice | Sayagh "validation guidance"、Devin docs |
+| No open decisions — `question` / `needs-info` 等のラベル、TBD / 未定 の記述 | blocking | ✅ slice | Ambig-SWE、Sayagh "ambiguity avoidance" |
+| Goal / problem — 何を達成するかの記述 | blocking | 次 | Copilot docs、SWE-bench underspecification |
+| Scope / Out of scope | blocking | 次 | Sayagh scope (+16.4%) |
+| 名指しされた依存（`blocked by owner/repo#N`）が open | blocking | 次 | 依存が閉じていないと、始められても終わらない |
+| Issue が closed | structural → NOT READY | 次 | 閉じた仕事は渡すものではない |
+| 本文が空、またはテンプレートのみ | structural → NOT READY | 次 | 決める対象そのものがない |
+| 大きすぎる（独立した goal が複数 / epic） | structural → NOT READY | 後 | Ehsani: 大きい PR ほど失敗する |
+| Sensitive（security / incident ラベル） | structural → NOT READY | 後 | Copilot docs: 人間に残す仕事 |
+| Relevant artifacts — ファイルパスやシンボル | **advisory**（判定に影響しない） | 後 | Copilot docs: agent が自力で見つけられることが多い |
+| 本文とコメントの矛盾 | semantic evaluator | 将来 | 決定論的には判定できない |
+
+### 捨てたもの
+
+- **0–100 点・総合スコア。** 点数からは「何を決めればよいか」が分からないため。
+- **Sayagh の "General" 特徴量**（本文の長さ、PR 履歴）。予測には効くが、人間が直せる行動につながらないため。
+- **repository の AI readiness**（[ADR 0001](adr/0001-issueready-judges-one-issue-and-never-acts-on-it.md)）。
+- **全文を LLM に渡して採点する方式**（ADR 0002）。
+- **最初から全観点を実装すること。** 最初の slice は 3 つの check に絞った。
+
+## 3. MVP のユーザーフロー
+
+```text
+URL を貼る -> [判定] -> Issue #123 / 🟡 NEEDS CLARIFICATION
+                        AIに渡す前に、人間が2つ決める必要があります。
+                        1. ...  2. ...
+                        [詳細を見る]  -> ✓/✗ check と evidence
+```
+
+- 取得に失敗したときは、原因と次の行動を 1 文で示す。
+- ⚠ 404 は「存在しない」とは言わない。private repository と区別できないため。
+
+## 4. 最小アーキテクチャ
+
+```text
+URL ─ github/url.ts ─ github/client.ts ─(IssueSnapshot)─ core/evaluate.ts + core/rules/* ─(Evaluation)─ web/ | cli.ts
+                                                            ↑
+                                    将来: semantic evaluator（同じ CheckResult を返し、source: "semantic"）
+```
+
+- `src/core` は純粋関数で、I/O を持たない（[ADR 0003](adr/0003-the-core-judges-a-snapshot-and-never-fetches.md)）。
+- 将来の拡張は次の 2 つで、どちらも core を変えずに足せる。
+  - **「AI-ready に直す」**: `missing` の check と decision を入力にして、書き直し案を出す。
+  - **GitHub Action**: CLI の終了コード（0 = READY）を使う。
+
+## 5. MVP 完了条件
+
+1. public Issue の URL から、3 値の判定と「人間が決めること」が出る。Web と CLI の両方。
+2. 最初の画面は判定と decision だけを出し、check は「詳細を見る」の中に置く（[ADR 0004](adr/0004-the-first-screen-shows-only-the-verdict-and-the-decisions.md)）。
+3. §2 の「次」の check が実装され、各 check に met と missing の両方を示すテストがある。
+4. NOT READY を返す条件が 1 つ以上ある。
+5. 取得失敗はすべて文章で返る: URL 不正 / PR / 404 / rate limit / 接続不可 / 想定外のステータス。
+6. この repository の Issue は、IssueReady 自身にかけて READY になる。
+
+## 6. 実装の単位
+
+GitHub Issues に分割する。各 Issue には Goal / Scope / Out of Scope / Acceptance Criteria / Verify を書く。
+
+## 7. 未解決 — owner に戻す判断
+
+- ⚠ **whyiug/issueready との関係**: 名前の衝突と、競合するか合流するか（[research.md §4](research.md)）。

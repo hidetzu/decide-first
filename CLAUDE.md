@@ -1,7 +1,4 @@
-# <project> — how we work
-
-⚠ **This file is a skeleton.** ⚠ **Every `FILL IN` below is a claim only this project can make.**
-⚠ **Delete this line and the `FILL IN` markers once they are filled.**
+# issue-ready — how we work
 
 This file holds **how to work**.
 **What may be claimed** goes in `docs/SPEC.md`; **why a decision was made** goes in `docs/adr/`.
@@ -19,14 +16,20 @@ Before starting work, read `.claude/rules/README.md`.
 
 ## 0. What this repository is
 
-> ⚠ **FILL IN.** One paragraph. What the artefact is, and what the project is an experiment in.
-> ⚠ **If how it gets built is also a subject, say so here** — otherwise nobody will treat it as one.
+IssueReady takes **one public GitHub issue URL** and answers one question:
+**can this issue be handed to an AI coding agent right now?** — `READY` / `NEEDS CLARIFICATION` /
+`NOT READY`, ⚠ **with the short list of what a human still has to decide.**
+⚠ **It is a quality gate in front of an agent, not an agent.** It never implements, never opens a PR,
+never rewrites the issue, and never judges a whole repository (`docs/SPEC.md` §2, `docs/adr/0001`).
+⚠ **How it is built is also a subject:** this repository's own issues are written so that IssueReady
+itself would call them `READY`.
 
 ---
 
 ## 1. The first principle
 
-> ⚠ **FILL IN.** One line, in the form `<X> before <Y>`, and the order is never swapped.
+⚠ **An explainable verdict before a clever one.** Every verdict must be traceable to named checks,
+each pointing at the line it found or naming what it looked for (`docs/adr/0002`).
 
 ⚠ **Whatever it says, it never outranks the evidence rules.**
 ⚠ **Those are [`.claude/rules/evidence.md`](.claude/rules/evidence.md), and they hold everywhere** —
@@ -47,9 +50,16 @@ re-word**, because re-wording them is how they get softened.
 
 ## 3. Architecture boundaries
 
-> ⚠ **FILL IN.** Four or five lines naming what this project keeps out and what it pushes where.
-> ⚠ **Then list what may not be introduced without a reason** (frameworks, runtime dependencies,
-> a second build system, threads before a single-threaded version works).
+```text
+src/core/     pure: IssueSnapshot -> Evaluation. ⚠ no I/O, no imports from github/ or web/
+src/github/   the only code that talks to GitHub. URL parsing and the REST client
+src/app.ts    URL -> Evaluation or a sentence. ⚠ the only place failure wording lives
+src/web/      node:http server + one static page.  src/cli.ts: the same, as text
+```
+
+⚠ **Not without a reason in an ADR:** a runtime dependency, a web framework, a build step for the
+server (Node runs the TypeScript directly), a database, an LLM call inside `src/core/`
+(`docs/adr/0002` — a semantic evaluator plugs in beside the rules, never inside them).
 
 Two clauses hold regardless of the domain:
 
@@ -70,8 +80,12 @@ Two clauses hold regardless of the domain:
 - **Never rename in bulk.** Changing a term does not license a sweep through the ADRs and past
   discussions.
 
-> ⚠ **FILL IN.** Where this project's names come from (an RFC, a standard, the users' own words),
-> and any mark whose meaning is already spoken for.
+Names come from the owner's brief and from GitHub's own vocabulary (issue, label, comment).
+⚠ **`READY` / `NEEDS CLARIFICATION` / `NOT READY` are the only verdicts** — in code
+`READY` / `NEEDS_CLARIFICATION` / `NOT_READY`. ⚠ **Never a score.**
+⚠ **`ready-for-ai` is already spoken for** by `.claude/rules/owner-decisions.md` (this repository's own
+workflow label). ⚠ **The product never applies a label in the MVP** (`docs/SPEC.md` §2).
+⚠ **Text a user reads is Japanese**, as in the brief.
 
 ### 4-1. Never open with what does not work
 

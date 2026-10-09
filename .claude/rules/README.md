@@ -41,10 +41,9 @@ incident, and `CLAUDE.md` §9 keeps the row.**
 | [`owner-decisions.md`](owner-decisions.md) | Decide yourself vs. ask, `ready-for-ai` |
 | [`git.md`](git.md) | Commits, permission, forbidden operations, what never goes public |
 
-> ⚠ **FILL IN.** Add this project's own files and list them above. Typically:
-> the language (responsibility, memory, errors, naming), the layer split, the domain,
-> and anything whose rules an outsider could not guess.
-> ⚠ **Name the grounds in each.** ⚠ **A rule with no grounds gets argued away.**
+⚠ **No project-specific rule file yet.** The layer split is owned by `CLAUDE.md` §3 and
+`docs/adr/0003`, and is asserted by the `boundary:` test cases. ⚠ **Add a file here when a rule
+appears that those do not cover, with its grounds.**
 
 ⚠ **`MUST` = required, `SHOULD` = default, `MAY` = optional.**
 ⚠ **`⚠` marks "it hurts if you step on it"** (same convention as `CLAUDE.md`).
