@@ -1,10 +1,10 @@
-# IssueReady 設計
+# Decide First 設計
 
 ⚠ **これは計画であり、主張ではない。** 実装済みで主張してよいものは [`SPEC.md`](SPEC.md) に、判断の理由は [`adr/`](adr/) に置く。調査結果と出典は [`research.md`](research.md)。
 
 ## 1. 一文での定義
 
-> **IssueReady は、GitHub Issue 1 件を AI Coding Agent へ今渡してよいかを判定し、渡す前に人間が決めることだけを短く示す Quality Gate である。**
+> **Decide First は、GitHub Issue 1 件を AI Coding Agent へ今渡してよいかを判定し、渡す前に人間が決めることだけを短く示す Quality Gate である。**
 
 ## 2. 評価モデル
 
@@ -78,12 +78,12 @@ URL ─ github/url.ts ─ github/client.ts ─(IssueSnapshot)─ core/evaluate.t
 3. §2 の「次」の check が実装され、各 check に met と missing の両方を示すテストがある。
 4. NOT READY を返す条件が 1 つ以上ある。
 5. 取得失敗はすべて文章で返る: URL 不正 / PR / 404 / rate limit / 接続不可 / 想定外のステータス。
-6. この repository の Issue は、IssueReady 自身にかけて READY になる。
+6. この repository の Issue は、Decide First 自身にかけて READY になる。
 
 ## 6. 実装の単位
 
 GitHub Issues に分割する。各 Issue には Goal / Scope / Out of Scope / Acceptance Criteria / Verify を書く。
 
-## 7. 未解決 — owner に戻す判断
+## 7. owner が決めたこと
 
-- ⚠ **whyiug/issueready との関係**: 名前の衝突と、競合するか合流するか（[research.md §4](research.md)）。
+- **whyiug/issueready とは差別化して進める。名前は Decide First に変える**（2026-10-10、[ADR 0005](adr/0005-renamed-to-decide-first-and-differentiated-by-always-answering.md)）。
