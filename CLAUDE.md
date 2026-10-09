@@ -1,4 +1,4 @@
-# issue-ready — how we work
+# decide-first — how we work
 
 This file holds **how to work**.
 **What may be claimed** goes in `docs/SPEC.md`; **why a decision was made** goes in `docs/adr/`.
@@ -16,12 +16,12 @@ Before starting work, read `.claude/rules/README.md`.
 
 ## 0. What this repository is
 
-IssueReady takes **one public GitHub issue URL** and answers one question:
+Decide First takes **one public GitHub issue URL** and answers one question:
 **can this issue be handed to an AI coding agent right now?** — `READY` / `NEEDS CLARIFICATION` /
 `NOT READY`, ⚠ **with the short list of what a human still has to decide.**
 ⚠ **It is a quality gate in front of an agent, not an agent.** It never implements, never opens a PR,
 never rewrites the issue, and never judges a whole repository (`docs/SPEC.md` §2, `docs/adr/0001`).
-⚠ **How it is built is also a subject:** this repository's own issues are written so that IssueReady
+⚠ **How it is built is also a subject:** this repository's own issues are written so that Decide First
 itself would call them `READY`.
 
 ---

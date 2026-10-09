@@ -1,9 +1,9 @@
 ---
 name: verify
-description: What to actually run to verify a change in issue-ready, tier by tier. Use before a PR, and whenever a change needs PASS / FAIL / NOT-VERIFIED.
+description: What to actually run to verify a change in decide-first, tier by tier. Use before a PR, and whenever a change needs PASS / FAIL / NOT-VERIFIED.
 ---
 
-# Verify — issue-ready
+# Verify — decide-first
 
 ⚠ **The contract is [`rules/verification.md`](../../rules/verification.md).** This file names the commands.
 

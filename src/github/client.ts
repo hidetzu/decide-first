@@ -48,7 +48,7 @@ export async function fetchIssue(ref: IssueRef, opts: ClientOptions = {}): Promi
   const headers: Record<string, string> = {
     accept: "application/vnd.github+json",
     "x-github-api-version": "2022-11-28",
-    "user-agent": "issue-ready",
+    "user-agent": "decide-first",
   };
   if (opts.token) headers.authorization = `Bearer ${opts.token}`;
   const path = `${base}/repos/${encodeURIComponent(ref.owner)}/${encodeURIComponent(ref.repo)}/issues/${ref.number}`;

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { once } from "node:events";
 import type { AddressInfo } from "node:net";
 import { assess } from "../src/app.ts";
-import { createIssueReadyServer } from "../src/web/server.ts";
+import { createDecideFirstServer } from "../src/web/server.ts";
 
 // ⚠ GitHub is stubbed: the end-to-end path is ours, the other end is a recorded shape.
 const apiIssue = (body: string) => ({ title: "Fix login", body, state: "open", html_url: "https://github.com/o/r/issues/5", labels: [], comments: 0 });
@@ -27,7 +27,7 @@ test("app: failures become a sentence, and 404 never claims non-existence alone"
 });
 
 test("server: GET / serves the page; /api/evaluate returns the JSON verdict", async () => {
-  const srv = createIssueReadyServer({ fetch: github("## Acceptance Criteria\n- a\n## Verify\nnpm test") }).listen(0, "127.0.0.1");
+  const srv = createDecideFirstServer({ fetch: github("## Acceptance Criteria\n- a\n## Verify\nnpm test") }).listen(0, "127.0.0.1");
   await once(srv, "listening");
   const base = `http://127.0.0.1:${(srv.address() as AddressInfo).port}`;
   try {

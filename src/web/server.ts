@@ -6,7 +6,7 @@ import type { ClientOptions } from "../github/client.ts";
 
 const PAGE = readFileSync(new URL("./index.html", import.meta.url));
 
-export function createIssueReadyServer(opts: ClientOptions = {}): Server {
+export function createDecideFirstServer(opts: ClientOptions = {}): Server {
   return createServer(async (req, res) => {
     const url = new URL(req.url ?? "/", "http://localhost");
     if (req.method === "GET" && url.pathname === "/") {

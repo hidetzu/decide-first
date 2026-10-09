@@ -1,6 +1,7 @@
-# IssueReady
+# Decide First
 
-**この GitHub Issue を AI Coding Agent へ渡して大丈夫か？** — その 1 つの問いにだけ答えます。
+**この GitHub Issue を AI Coding Agent へ渡して大丈夫か？** — その 1 つの問いにだけ答え、
+渡す前に **人間が先に決めること** を示します。
 
 ```text
 cli/cli#14627  `gh` fails with obscure errors when access token misses some permissionts
@@ -17,7 +18,7 @@ public repository の Issue URL を入れると、title・body・labels・commen
 ⚠ 点数は出しません。判定はどれも、名前のついた決定論的な check と、その根拠の行までたどれます
 （[docs/adr/0002](docs/adr/0002-the-verdict-is-derived-from-named-rule-checks-never-a-score.md)）。
 
-⚠ IssueReady は Agent に仕事を渡す直前の **Quality Gate** です。実装・PR 作成・Issue の書き換えはしません。
+⚠ Decide First は Agent に仕事を渡す直前の **Quality Gate** です。実装・PR 作成・Issue の書き換えはしません。
 repository 全体の AI readiness も判定しません（[docs/adr/0001](docs/adr/0001-issueready-judges-one-issue-and-never-acts-on-it.md)）。
 
 ## 使い方
@@ -40,7 +41,7 @@ node src/cli.ts https://github.com/owner/repo/issues/123   # exit 0 = READY
 | Verification | 中身のある「Verify / How to test / 確認方法 / 再現手順 …」見出し |
 | No open decisions | `question` / `needs-info` 等のラベル、または TBD / 未定 等の記述 |
 
-本文とコメントの両方を見ます。主張してよい範囲は [docs/SPEC.md](docs/SPEC.md)、今後の check は [docs/design.md](docs/design.md)、調査は [docs/research.md](docs/research.md) にあります。
+本文とコメントの両方を見ます。旧名は IssueReady です（[docs/adr/0005](docs/adr/0005-renamed-to-decide-first-and-differentiated-by-always-answering.md)）。主張してよい範囲は [docs/SPEC.md](docs/SPEC.md)、今後の check は [docs/design.md](docs/design.md)、調査は [docs/research.md](docs/research.md) にあります。
 
 ## 開発
 
