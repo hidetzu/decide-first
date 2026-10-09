@@ -1,0 +1,18 @@
+{
+  "name": "issue-ready",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Judges whether one GitHub issue can be handed to an AI coding agent right now, and what a human still has to decide.",
+  "type": "module",
+  "engines": { "node": ">=22.18" },
+  "scripts": {
+    "start": "node src/web/main.ts",
+    "check": "tsc --noEmit && node --test \"test/**/*.test.ts\"",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.30",
+    "typescript": "5.9.3"
+  }
+}

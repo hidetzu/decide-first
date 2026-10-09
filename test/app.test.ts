@@ -1,0 +1,46 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { once } from "node:events";
+import type { AddressInfo } from "node:net";
+import { assess } from "../src/app.ts";
+import { createIssueReadyServer } from "../src/web/server.ts";
+
+// ⚠ GitHub is stubbed: the end-to-end path is ours, the other end is a recorded shape.
+const apiIssue = (body: string) => ({ title: "Fix login", body, state: "open", html_url: "https://github.com/o/r/issues/5", labels: [], comments: 0 });
+const github = (body: string, status = 200) =>
+  (async () => new Response(JSON.stringify(apiIssue(body)), { status })) as unknown as typeof fetch;
+
+test("app: a URL becomes an evaluation", async () => {
+  const r = await assess("https://github.com/o/r/issues/5", { fetch: github("Please fix.") });
+  assert.ok(r.ok);
+  assert.equal(r.evaluation.verdict, "NEEDS_CLARIFICATION");
+  assert.deepEqual(r.evaluation.issue, { owner: "o", repo: "r", number: 5 });
+});
+
+test("app: failures become a sentence, and 404 never claims non-existence alone", async () => {
+  const bad = await assess("not a url", { fetch: github("") });
+  assert.ok(!bad.ok && /Issue の URL/.test(bad.message));
+  const pr = await assess("https://github.com/o/r/pull/5", { fetch: github("") });
+  assert.ok(!pr.ok && /Pull Request/.test(pr.message));
+  const nf = await assess("https://github.com/o/r/issues/5", { fetch: github("", 404) });
+  assert.ok(!nf.ok && /private repository/.test(nf.message));
+});
+
+test("server: GET / serves the page; /api/evaluate returns the JSON verdict", async () => {
+  const srv = createIssueReadyServer({ fetch: github("## Acceptance Criteria\n- a\n## Verify\nnpm test") }).listen(0, "127.0.0.1");
+  await once(srv, "listening");
+  const base = `http://127.0.0.1:${(srv.address() as AddressInfo).port}`;
+  try {
+    const page = await fetch(base + "/");
+    assert.equal(page.status, 200);
+    assert.match(await page.text(), /詳細を見る/);
+    const ok = await fetch(base + "/api/evaluate?url=" + encodeURIComponent("https://github.com/o/r/issues/5"));
+    assert.equal(ok.status, 200);
+    assert.equal((await ok.json()).evaluation.verdict, "READY");
+    const bad = await fetch(base + "/api/evaluate?url=x");
+    assert.equal(bad.status, 422);
+    assert.equal((await bad.json()).ok, false);
+  } finally {
+    srv.close();
+  }
+});

@@ -13,4 +13,6 @@
 .env
 .envrc
 
-# ⚠ FILL IN: build output, caches, and generated artefacts for this project.
+
+# Dependencies
+node_modules/
