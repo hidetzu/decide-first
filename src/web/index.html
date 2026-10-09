@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IssueReady</title>
+<style>
+  :root {
+    --bg: #fafaf9; --fg: #1c1917; --muted: #57534e; --line: #e7e5e4; --card: #ffffff;
+    --ready: #15803d; --clarify: #a16207; --not: #b91c1c; --accent: #1d4ed8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1917; --fg: #f5f5f4; --muted: #a8a29e; --line: #44403c; --card: #292524;
+      --ready: #4ade80; --clarify: #facc15; --not: #f87171; --accent: #93c5fd;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+         font: 16px/1.6 system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+  main { max-width: 640px; margin: 0 auto; padding: 48px 16px; }
+  h1 { font-size: 1.1rem; margin: 0 0 4px; }
+  .lead { color: var(--muted); margin: 0 0 24px; font-size: .95rem; }
+  form { display: flex; gap: 8px; }
+  input { flex: 1; min-width: 0; padding: 10px 12px; font: inherit; color: inherit; background: var(--card);
+          border: 1px solid var(--line); border-radius: 8px; }
+  button { padding: 10px 16px; font: inherit; border: 0; border-radius: 8px; background: var(--accent);
+           color: var(--bg); cursor: pointer; }
+  button:disabled { opacity: .6; cursor: wait; }
+  #result { margin-top: 32px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 24px; }
+  .issue { color: var(--muted); font-size: .9rem; margin: 0 0 8px; overflow-wrap: anywhere; }
+  .verdict { font-size: 1.5rem; font-weight: 700; margin: 0 0 12px; }
+  .READY { color: var(--ready); } .NEEDS_CLARIFICATION { color: var(--clarify); } .NOT_READY { color: var(--not); }
+  ol { padding-left: 1.4em; margin: 8px 0 0; }
+  details { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 12px; }
+  summary { cursor: pointer; color: var(--accent); }
+  .checks { list-style: none; padding: 0; margin: 12px 0 0; }
+  .checks li { padding: 6px 0; }
+  .mark-met { color: var(--ready); } .mark-missing { color: var(--not); }
+  .evidence { display: block; color: var(--muted); font-size: .85rem; padding-left: 1.4em; }
+  .error { color: var(--not); }
+</style>
+</head>
+<body>
+<main>
+  <h1>IssueReady</h1>
+  <p class="lead">この GitHub Issue を AI Coding Agent へ渡して大丈夫か？</p>
+  <form id="form">
+    <input id="url" type="url" required placeholder="https://github.com/owner/repo/issues/123" aria-label="GitHub Issue URL">
+    <button id="go" type="submit">判定</button>
+  </form>
+  <div id="result" aria-live="polite"></div>
+</main>
+<script>
+  const LABEL = { READY: "🟢 READY", NEEDS_CLARIFICATION: "🟡 NEEDS CLARIFICATION", NOT_READY: "🔴 NOT READY" };
+  const $ = (tag, attrs = {}, ...kids) => {
+    const el = document.createElement(tag);
+    Object.assign(el, attrs);
+    el.append(...kids);
+    return el;
+  };
+  const form = document.getElementById("form"), input = document.getElementById("url");
+  const go = document.getElementById("go"), out = document.getElementById("result");
+
+  form.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    go.disabled = true;
+    out.replaceChildren($("p", { className: "lead", textContent: "取得しています…" }));
+    try {
+      const res = await fetch("/api/evaluate?url=" + encodeURIComponent(input.value));
+      const data = await res.json();
+      out.replaceChildren(data.ok ? view(data.evaluation) : $("p", { className: "error", textContent: data.message }));
+    } catch {
+      out.replaceChildren($("p", { className: "error", textContent: "サーバに接続できませんでした。再度お試しください。" }));
+    } finally {
+      go.disabled = false;
+    }
+  });
+
+  // ⚠ First screen: verdict and what a human must decide. Checks only inside <details> (docs/adr/0004).
+  function view(e) {
+    const card = $("div", { className: "card" },
+      $("p", { className: "issue", textContent: `${e.issue.owner}/${e.issue.repo}#${e.issue.number}  ${e.title}` }),
+      $("p", { className: "verdict " + e.verdict, textContent: LABEL[e.verdict] }));
+    if (e.decisions.length === 0) {
+      card.append($("p", { textContent: "人間が決めることは見つかりませんでした。AIへ渡せます。" }));
+    } else {
+      card.append($("p", { textContent: `AIに渡す前に、人間が${e.decisions.length}つ決める必要があります。` }),
+        $("ol", {}, ...e.decisions.map((d) => $("li", { textContent: d }))));
+    }
+    card.append($("details", {},
+      $("summary", { textContent: "詳細を見る" }),
+      $("ul", { className: "checks" }, ...e.checks.map((c) => $("li", {},
+        $("span", { className: "mark-" + c.status, textContent: c.status === "met" ? "✓ " : "✗ " }),
+        c.label,
+        $("span", { className: "evidence", textContent: c.evidence }))))));
+    return card;
+  }
+</script>
+</body>
+</html>
