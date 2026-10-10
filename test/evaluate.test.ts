@@ -4,7 +4,7 @@ import { evaluate } from "../src/core/evaluate.ts";
 import { DEFAULT_CHECKS } from "../src/core/rules/index.ts";
 import { issue } from "./helpers.ts";
 
-const READY_BODY = "## Goal\nx\n## Acceptance Criteria\n- [ ] returns 200\n## Verify\nnpm test\n";
+const READY_BODY = "## Goal\nx\n## Scope\nsrc/a.ts\n## Out of Scope\nsrc/b.ts\n## Acceptance Criteria\n- [ ] returns 200\n## Verify\nnpm test\n";
 
 test("evaluate: all checks met -> READY with no decisions", () => {
   const e = evaluate(issue({ body: READY_BODY }), DEFAULT_CHECKS);
@@ -16,10 +16,11 @@ test("evaluate: all checks met -> READY with no decisions", () => {
 test("evaluate: any missing -> NEEDS_CLARIFICATION, one decision per missing check, in order", () => {
   const e = evaluate(issue({ body: "Please fix the login." }), DEFAULT_CHECKS);
   assert.equal(e.verdict, "NEEDS_CLARIFICATION");
-  assert.deepEqual(e.checks.filter((c) => c.kind === "blocking").map((c) => c.status), ["missing", "missing", "missing", "met"]);
-  assert.equal(e.decisions.length, 3);
+  assert.deepEqual(e.checks.filter((c) => c.kind === "blocking").map((c) => c.status), ["missing", "missing", "missing", "missing", "met"]);
+  assert.equal(e.decisions.length, 4);
   assert.match(e.decisions[0], /この Issue で達成すること/);
-  assert.match(e.decisions[1], /完了と判断する条件/);
+  assert.match(e.decisions[1], /変更してよい範囲と、触れてはいけない範囲/);
+  assert.match(e.decisions[2], /完了と判断する条件/);
 });
 
 test("evaluate: decisions is empty exactly when the verdict is READY", () => {

@@ -27,7 +27,7 @@ test("app: failures become a sentence, and 404 never claims non-existence alone"
 });
 
 test("server: GET / serves the page, /view.js its view module; /api/evaluate returns the JSON verdict", async () => {
-  const srv = createDecideFirstServer({ fetch: github("## Goal\nx\n## Acceptance Criteria\n- a\n## Verify\nnpm test") }).listen(0, "127.0.0.1");
+  const srv = createDecideFirstServer({ fetch: github("## Goal\nx\n## Scope\nsrc/a.ts\n## Out of Scope\nsrc/b.ts\n## Acceptance Criteria\n- a\n## Verify\nnpm test") }).listen(0, "127.0.0.1");
   await once(srv, "listening");
   const base = `http://127.0.0.1:${(srv.address() as AddressInfo).port}`;
   try {
