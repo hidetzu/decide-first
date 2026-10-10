@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { once } from "node:events";
 import type { AddressInfo } from "node:net";
-import { assess } from "../src/app.ts";
+import { assess, UNREADABLE } from "../src/app.ts";
 import { createDecideFirstServer } from "../src/web/server.ts";
 
 // ⚠ GitHub is stubbed: the end-to-end path is ours, the other end is a recorded shape.
@@ -46,5 +46,31 @@ test("server: GET / serves the page, /view.js its view module; /api/evaluate ret
     assert.equal((await bad.json()).ok, false);
   } finally {
     srv.close();
+  }
+});
+
+// hidetzu/decide-first#23: one malformed answer from GitHub used to end the server process.
+const html = (async () => new Response("<html>oops</html>", { status: 200 })) as unknown as typeof fetch;
+// Not a Response at all: something inside the client throws that nothing there catches.
+const broken = (async () => null) as unknown as typeof fetch;
+
+test("app: a malformed answer from GitHub becomes the owner's sentence (hidetzu/decide-first#23)", async () => {
+  assert.deepEqual(await assess("https://github.com/o/r/issues/5", { fetch: html }), { ok: false, message: UNREADABLE });
+});
+
+test("server: a malformed answer or an unforeseen throw is JSON, and the process keeps serving (hidetzu/decide-first#23)", async () => {
+  for (const [githubFetch, status] of [[html, 422], [broken, 500]] as const) {
+    const srv = createDecideFirstServer({ fetch: githubFetch }).listen(0, "127.0.0.1");
+    await once(srv, "listening");
+    const base = `http://127.0.0.1:${(srv.address() as AddressInfo).port}`;
+    try {
+      // ⚠ A deadline, so a server that never answers fails here instead of hanging the run.
+      const r = await fetch(base + "/api/evaluate?url=" + encodeURIComponent("https://github.com/o/r/issues/5"), { signal: AbortSignal.timeout(5000) });
+      assert.equal(r.status, status);
+      assert.deepEqual(await r.json(), { ok: false, message: UNREADABLE });
+      assert.equal((await fetch(base + "/")).status, 200, "still serving after it");
+    } finally {
+      srv.close();
+    }
   }
 });

@@ -14,7 +14,12 @@ export type FetchFailure =
   | { ok: false; kind: "rate_limited"; resetAt?: string }
   | { ok: false; kind: "unreachable"; detail: string }
   | { ok: false; kind: "unexpected_status"; status: number }
-  | { ok: false; kind: "too_many_comments"; limit: number };
+  | { ok: false; kind: "too_many_comments"; limit: number }
+  // ⚠ Malformed: the body was not JSON, was cut short, or lacked a field we read. Not the same as
+  //   unexpected_status, which is a status we do not handle; here the status was fine
+  //   (rules/evidence.md § Outcomes). hidetzu/decide-first#23: this used to throw and take the
+  //   whole web server down.
+  | { ok: false; kind: "malformed_response" };
 
 export type FetchResult = { ok: true; issue: IssueSnapshot } | FetchFailure;
 
@@ -49,6 +54,26 @@ interface ApiComment {
   created_at: string;
 }
 
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+const isStringOrNull = (v: unknown) => typeof v === "string" || v === null;
+/** Only the fields this file reads. ⚠ Anything else may change shape without breaking us. */
+const isApiIssue = (v: unknown): v is ApiIssue =>
+  isObject(v) && typeof v.title === "string" && isStringOrNull(v.body) && typeof v.state === "string" &&
+  typeof v.html_url === "string" && Array.isArray(v.labels) && typeof v.comments === "number";
+const isApiComments = (v: unknown): v is ApiComment[] =>
+  Array.isArray(v) && v.every((c) => isObject(c) && isStringOrNull(c.body) && typeof c.created_at === "string" &&
+    (c.user === null || (isObject(c.user) && typeof c.user.login === "string")));
+
+/** The body as T, or undefined when it is not JSON, is cut short, or is not shaped like T. */
+async function readJson<T>(res: Response, is: (v: unknown) => v is T): Promise<T | undefined> {
+  try {
+    const v: unknown = await res.json();
+    return is(v) ? v : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function fetchIssue(ref: IssueRef, opts: ClientOptions = {}): Promise<FetchResult> {
   const doFetch = opts.fetch ?? fetch;
   const base = opts.apiBase ?? "https://api.github.com";
@@ -78,7 +103,8 @@ export async function fetchIssue(ref: IssueRef, opts: ClientOptions = {}): Promi
 
   const issueRes = await get(path);
   if (!(issueRes instanceof Response)) return issueRes;
-  const issue = (await issueRes.json()) as ApiIssue;
+  const issue = await readJson(issueRes, isApiIssue);
+  if (!issue) return { ok: false, kind: "malformed_response" };
   // ⚠ The issues endpoint also serves pull requests. A PR is out of scope (docs/SPEC.md §2).
   if (issue.pull_request) return { ok: false, kind: "is_pull_request" };
 
@@ -88,7 +114,8 @@ export async function fetchIssue(ref: IssueRef, opts: ClientOptions = {}): Promi
       if (page > MAX_COMMENT_PAGES) return { ok: false, kind: "too_many_comments", limit: MAX_COMMENT_PAGES * PER_PAGE };
       const res = await get(`${path}/comments?per_page=${PER_PAGE}&page=${page}`);
       if (!(res instanceof Response)) return res;
-      const batch = (await res.json()) as ApiComment[];
+      const batch = await readJson(res, isApiComments);
+      if (!batch) return { ok: false, kind: "malformed_response" };
       for (const c of batch) comments.push({ author: c.user?.login ?? "", body: c.body ?? "", createdAt: c.created_at });
       if (batch.length < PER_PAGE) break;
     }
@@ -112,8 +139,11 @@ export async function fetchIssue(ref: IssueRef, opts: ClientOptions = {}): Promi
 
   async function dependencyOutcome(dep: IssueRef): Promise<Dependency["outcome"]> {
     const res = await get(`${base}/repos/${encodeURIComponent(dep.owner)}/${encodeURIComponent(dep.repo)}/issues/${dep.number}`);
-    if (!(res instanceof Response)) return res.kind === "too_many_comments" ? "unexpected_status" : res.kind;
-    const d = (await res.json()) as ApiIssue;
+    if (!(res instanceof Response)) return res.kind === "too_many_comments" || res.kind === "malformed_response" ? "unexpected_status" : res.kind;
+    // ⚠ A malformed dependency is folded into unexpected_status (owner decision on hidetzu/decide-first#23).
+    const d = await readJson(res, (v): v is { state: string; state_reason?: string | null; pull_request?: unknown } =>
+      isObject(v) && typeof v.state === "string");
+    if (!d) return "unexpected_status";
     if (d.pull_request) return "is_pull_request";
     if (d.state !== "closed") return "open";
     // ⚠ Only "completed" resolves a dependency; not_planned, duplicate and no reason do not (docs/adr/0009).
