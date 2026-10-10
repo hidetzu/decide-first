@@ -130,3 +130,29 @@ test("client: at most MAX_DEPENDENCIES are fetched; the rest are not_checked", a
   assert.equal(r.depCalls, 5);
   assert.deepEqual(r.deps, ["completed", "completed", "completed", "completed", "completed", "not_checked", "not_checked"]);
 });
+
+// hidetzu/decide-first#23: each of these used to throw out of fetchIssue.
+const MALFORMED: Record<string, () => Response> = {
+  "HTML with status 200": () => new Response("<html>oops</html>", { status: 200 }),
+  "JSON cut short": () => new Response('{"title":"t","bo', { status: 200 }),
+  "JSON without labels": () => json({ message: "x" }),
+};
+
+test("client: a malformed issue body is malformed_response, never a throw (hidetzu/decide-first#23)", async () => {
+  for (const [name, make] of Object.entries(MALFORMED)) {
+    const r = await fetchIssue(REF, { fetch: stub(() => make()).fetch });
+    assert.deepEqual(r, { ok: false, kind: "malformed_response" }, name);
+  }
+});
+
+test("client: a malformed comment page is malformed_response", async () => {
+  const s = stub((url) => (url.includes("/comments") ? new Response("<html>", { status: 200 }) : json({ ...ISSUE, comments: 3 })));
+  assert.deepEqual(await fetchIssue(REF, { fetch: s.fetch }), { ok: false, kind: "malformed_response" });
+});
+
+test("client: a malformed dependency is unexpected_status, and judging goes on", async () => {
+  const s = stub((url) => (url.endsWith("/issues/1") ? json({ ...ISSUE, body: "Blocked by #2" }) : new Response("<html>", { status: 200 })));
+  const r = await fetchIssue(REF, { fetch: s.fetch });
+  assert.ok(r.ok);
+  assert.deepEqual(r.issue.dependencies.map((d) => d.outcome), ["unexpected_status"]);
+});

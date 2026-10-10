@@ -8,6 +8,13 @@ import type { Evaluation } from "./core/types.ts";
 import { fetchIssue, type ClientOptions, type FetchFailure } from "./github/client.ts";
 import { parseIssueUrl } from "./github/url.ts";
 
+/**
+ * What a person reads when GitHub's answer could not be read, or something we did not foresee
+ * went wrong. ⚠ The server and the CLI both use this one sentence (owner decision on
+ * hidetzu/decide-first#23).
+ */
+export const UNREADABLE = "GitHub API の応答を読み取れませんでした。しばらくしてから再度お試しください。";
+
 export type AssessResult = { ok: true; evaluation: Evaluation } | { ok: false; message: string };
 
 export async function assess(url: string, opts: ClientOptions = {}): Promise<AssessResult> {
@@ -39,6 +46,8 @@ function describeFailure(f: FetchFailure): string {
       return "GitHub API に接続できませんでした。ネットワークを確認して再度お試しください。";
     case "unexpected_status":
       return `GitHub API が想定外の応答（HTTP ${f.status}）を返しました。しばらくしてから再度お試しください。`;
+    case "malformed_response":
+      return UNREADABLE;
     case "too_many_comments":
       return `コメントが ${f.limit} 件を超える Issue は現在対象外です。途中までのコメントで判定すると、後のコメントでの決定を見落とすためです。`;
   }
