@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { evaluate } from "../src/core/evaluate.ts";
 import { DEFAULT_CHECKS } from "../src/core/rules/index.ts";
 import { render } from "../src/render-text.ts";
-import { renderEvaluation } from "../src/web/view.js";
+import { renderEvaluation } from "../public/view.js";
 import { issue } from "./helpers.ts";
 
 // Every check missing at once: closed, template-only body, a question label, and an open dependency.

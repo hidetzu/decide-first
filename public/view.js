@@ -3,9 +3,9 @@
 //   and `tsc --noEmit` still checks it (checkJs). Owner decision on hidetzu/decide-first#5.
 // ⚠ First screen: verdict and what a human must decide. Checks only inside <details> (docs/adr/0004).
 
-/** @typedef {import("../core/types.ts").Evaluation} Evaluation */
-/** @typedef {import("../core/types.ts").Verdict} Verdict */
-/** @typedef {import("../core/types.ts").CheckResult} CheckResult */
+/** @typedef {import("../src/core/types.ts").Evaluation} Evaluation */
+/** @typedef {import("../src/core/types.ts").Verdict} Verdict */
+/** @typedef {import("../src/core/types.ts").CheckResult} CheckResult */
 
 /** @type {Record<Verdict, string>} */
 const LABEL = { READY: "🟢 READY", NEEDS_CLARIFICATION: "🟡 NEEDS CLARIFICATION", NOT_READY: "🔴 NOT READY" };
