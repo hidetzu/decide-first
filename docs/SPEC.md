@@ -66,6 +66,7 @@ they are different things and the difference is stated, not implied.
 | Pull Request の判定 | yes | 対象は Issue のみ |
 | 点数 | yes | `docs/adr/0002` |
 | 大きすぎる Issue・sensitive な Issue を NOT_READY にする check | no | `docs/design.md` §2 の「後」 |
+| 語への言及と、本当の未決・依存の区別（例: 「「TBD」などの未決の印」と書いただけで未決と判定する） | no | 文字の並びだけでは区別できない。インラインコードの中は読まない（hidetzu/decide-first#21）が、かぎ括弧などで言及した語は拾う。2026-10-10 に hidetzu/decide-first#21 自身で観測した。扱いは owner が別途決める |
 | semantic evaluator（LLM） | no | 将来。`docs/adr/0002` |
 
 ## 3. Measured numbers
