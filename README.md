@@ -8,10 +8,25 @@ cli/cli#14627  `gh` fails with obscure errors when access token misses some perm
 
 🟡 NEEDS CLARIFICATION
 
-AIに渡す前に、人間が1つ決める必要があります。
+AIに渡す前に、人間が2つ決める必要があります。
 
-1. ラベル「needs-triage」が示す未決事項への結論
+1. 変更してよい範囲と、触れてはいけない範囲（Out of Scope）
+   根拠: 研究の数値はありません。
+   出典: Devin のガイドが scope と境界を書くよう求めている
+   例:
+     ## Scope
+     <変更してよいファイル・機能>
+     ## Out of Scope
+     <触れてはいけないもの>
+2. ラベル「needs-triage」が示す未決事項への結論
+   根拠: 曖昧さの少ない Issue は、merge 率が 8.4 ポイント高かった。質問できれば成績が最大 74% 改善した研究もある。
+   出典: Sayagh 2025・Copilot の PR 3,180 件・相関 ／ Ambig-SWE 2025
+   例:
+     結論を書き、未決の印（ラベルや TBD）を外す
+     決定: <結論>（理由: <…>）
 ```
+
+（2026-10-10T03:09Z、commit `fc3a54d` で `node src/cli.ts https://github.com/cli/cli/issues/14627` を実行した出力の冒頭。Issue の中身が変われば、出力も変わります）
 
 public repository の Issue URL を入れると、title・body・labels・comments を GitHub API から読み、
 `READY` / `NEEDS CLARIFICATION` / `NOT READY` と **「渡す前に人間が決めること」** を返します。
@@ -48,9 +63,13 @@ node src/cli.ts https://github.com/owner/repo/issues/123   # exit 0 = READY
 
 「人間が決めること」の各項目は開けて、根拠（研究の数値と出典。相関であることも示す）と書き方の雛形が出ます（[docs/adr/0008](docs/adr/0008-evidence-and-an-example-open-from-each-decision.md)）。CLI では各項目の下に出ます。
 
-上の 6 つは本文とコメントの両方を見て、欠けていれば 🟡 NEEDS CLARIFICATION にします。Body は本文だけを見ます。旧名は IssueReady です（[docs/adr/0005](docs/adr/0005-renamed-to-decide-first-and-differentiated-by-always-answering.md)）。主張してよい範囲は [docs/SPEC.md](docs/SPEC.md)、今後の check は [docs/design.md](docs/design.md)、調査は [docs/research.md](docs/research.md) にあります。
+上の 6 つは本文とコメントの両方を見て、欠けていれば 🟡 NEEDS CLARIFICATION にします。Body は本文だけを見ます。旧名は IssueReady です（[docs/adr/0005](docs/adr/0005-renamed-to-decide-first-and-differentiated-by-always-answering.md)）。主張してよい範囲は [docs/SPEC.md](docs/SPEC.md)、もとになったブリーフは [docs/brief.md](docs/brief.md)、今後の check は [docs/design.md](docs/design.md)、調査は [docs/research.md](docs/research.md) にあります。
 
 ## 開発
 
 - 進め方は [CLAUDE.md](CLAUDE.md) と [.claude/rules/](.claude/rules/README.md)。[hidetzu/claude-dev-template](https://github.com/hidetzu/claude-dev-template) を元にしています。
 - 検証は `npm run check` と `node .claude/tools/docs-check.mjs`（[verify](.claude/skills/verify/SKILL.md)）。
+
+## ライセンス
+
+[MIT](LICENSE)

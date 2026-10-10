@@ -2,6 +2,7 @@
   "name": "decide-first",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Judges whether one GitHub issue can be handed to an AI coding agent right now, and what a human still has to decide.",
   "type": "module",
   "engines": { "node": ">=22.18" },
