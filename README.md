@@ -43,6 +43,8 @@ node src/cli.ts https://github.com/owner/repo/issues/123   # exit 0 = READY
 | Issue is open | Issue が closed なら 🔴 NOT READY |
 | Body | 本文が空、または見出しと HTML コメントだけなら 🔴 NOT READY |
 
+「人間が決めること」の各項目は開けて、根拠（研究の数値と出典。相関であることも示す）と書き方の雛形が出ます（[docs/adr/0008](docs/adr/0008-evidence-and-an-example-open-from-each-decision.md)）。CLI では各項目の下に出ます。
+
 上の 3 つは本文とコメントの両方を見て、欠けていれば 🟡 NEEDS CLARIFICATION にします。Body は本文だけを見ます。旧名は IssueReady です（[docs/adr/0005](docs/adr/0005-renamed-to-decide-first-and-differentiated-by-always-answering.md)）。主張してよい範囲は [docs/SPEC.md](docs/SPEC.md)、今後の check は [docs/design.md](docs/design.md)、調査は [docs/research.md](docs/research.md) にあります。
 
 ## 開発
