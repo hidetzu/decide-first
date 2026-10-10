@@ -33,11 +33,11 @@ lower bound) and 24:
 - ⚠ **does not run: the external tier.** Its result depends on GitHub being up and on the shared
   rate limit. ⚠ **Run it by hand before a PR that touches `src/github/` or `src/app.ts`, and say on
   the PR whether it ran.**
-- ⚠ **does not run: UI rendering** (no case asserts it; see below).
+- ⚠ **does not run: rendering in a browser** (the `view:` cases assert the HTML; nothing asserts how it looks).
 
 ## ⚠ Notes
 
 - The external tier makes unauthenticated GETs (60/h per IP). Set `GITHUB_TOKEN` to raise the limit; ⚠ it never widens what is read.
 - ⚠ **The external tier never writes**: `src/` has no write method (`boundary:` case, `docs/adr/0001`).
-- ⚠ **UI rendering is not asserted by any case.** When `src/web/index.html` changes, start it
-  (`npm start`) and look; ⚠ report it as NOT-VERIFIED otherwise.
+- ⚠ **The card's HTML is asserted (`view:` cases); how it looks is not.** When `src/web/` changes, start it
+  (`npm start`) and look; ⚠ report the look as NOT-VERIFIED otherwise.

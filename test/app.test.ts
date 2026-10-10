@@ -26,14 +26,18 @@ test("app: failures become a sentence, and 404 never claims non-existence alone"
   assert.ok(!nf.ok && /private repository/.test(nf.message));
 });
 
-test("server: GET / serves the page; /api/evaluate returns the JSON verdict", async () => {
+test("server: GET / serves the page, /view.js its view module; /api/evaluate returns the JSON verdict", async () => {
   const srv = createDecideFirstServer({ fetch: github("## Acceptance Criteria\n- a\n## Verify\nnpm test") }).listen(0, "127.0.0.1");
   await once(srv, "listening");
   const base = `http://127.0.0.1:${(srv.address() as AddressInfo).port}`;
   try {
     const page = await fetch(base + "/");
     assert.equal(page.status, 200);
-    assert.match(await page.text(), /詳細を見る/);
+    assert.match(await page.text(), /import \{ renderEvaluation \} from "\/view\.js"/);
+    const view = await fetch(base + "/view.js");
+    assert.equal(view.status, 200);
+    assert.match(view.headers.get("content-type") ?? "", /^text\/javascript/);
+    assert.match(await view.text(), /export function renderEvaluation/);
     const ok = await fetch(base + "/api/evaluate?url=" + encodeURIComponent("https://github.com/o/r/issues/5"));
     assert.equal(ok.status, 200);
     assert.equal((await ok.json()).evaluation.verdict, "READY");
