@@ -78,7 +78,9 @@ URL ─ github/url.ts ─ github/client.ts ─(IssueSnapshot)─ core/evaluate.t
 3. §2 の「次」の check が実装され、各 check に met と missing の両方を示すテストがある。
 4. NOT READY を返す条件が 1 つ以上ある。
 5. 取得失敗はすべて文章で返る: URL 不正 / PR / 404 / rate limit / 接続不可 / 想定外のステータス。
-6. この repository の Issue は、Decide First 自身にかけて READY になる。
+6. この repository の Issue は、`ready-for-ai` を付ける時点で Decide First にかけ、Issue is open 以外に missing がない。
+   - 2026-10-10 に書き換えた（owner の決定）。元は「Decide First 自身にかけて READY になる」だった。close した Issue は設計上 NOT READY になるので、close したあとでは測れなかった。
+7. Web は Cloudflare Workers で公開する（[ADR 0010](adr/0010-publish-on-cloudflare-workers-with-a-bundling-step.md)）。
 
 ## 6. 実装の単位
 
@@ -86,6 +88,7 @@ GitHub Issues に分割する。各 Issue には Goal / Scope / Out of Scope / A
 
 ## 7. owner が決めたこと
 
+- **Web は Cloudflare Workers（無料枠）で公開する。そのためだけに wrangler のビルドを足す。GitHub API には権限なしのトークンを使う。v1 は回数制限なし、デプロイは GitHub Actions（main への push、検査のあと）**（2026-10-10、[ADR 0010](adr/0010-publish-on-cloudflare-workers-with-a-bundling-step.md)）。**未実装。**
 - **依存は「完了」で閉じたときだけ解消とみなす。取得できなかったものは解消とみなさない。取り出しは `src/core/` の純粋関数。取りに行くのは 5 件まで（仮の値）**（2026-10-10、[ADR 0009](adr/0009-a-dependency-counts-as-done-only-when-closed-as-completed.md)）。
 - **根拠（研究の数値。出典・範囲・相関つき）と書き方の例は、「人間が決めること」の各項目から開く**（2026-10-10、画面案を見比べて決定、[ADR 0008](adr/0008-evidence-and-an-example-open-from-each-decision.md)）。**未実装。**
 - **NOT READY のときは structural の decision だけを出す。新しい check の文言は hidetzu/decide-first#1 の計画どおり**（2026-10-10、[ADR 0006](adr/0006-not-ready-shows-only-the-structural-decisions.md)）。
