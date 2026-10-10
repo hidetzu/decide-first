@@ -52,8 +52,8 @@
   </form>
   <div id="result" aria-live="polite"></div>
 </main>
-<script>
-  const LABEL = { READY: "🟢 READY", NEEDS_CLARIFICATION: "🟡 NEEDS CLARIFICATION", NOT_READY: "🔴 NOT READY" };
+<script type="module">
+  import { renderEvaluation } from "/view.js";
   const $ = (tag, attrs = {}, ...kids) => {
     const el = document.createElement(tag);
     Object.assign(el, attrs);
@@ -70,33 +70,15 @@
     try {
       const res = await fetch("/api/evaluate?url=" + encodeURIComponent(input.value));
       const data = await res.json();
-      out.replaceChildren(data.ok ? view(data.evaluation) : $("p", { className: "error", textContent: data.message }));
+      // ⚠ renderEvaluation escapes every string that came from the issue (src/web/view.js).
+      if (data.ok) out.innerHTML = renderEvaluation(data.evaluation);
+      else out.replaceChildren($("p", { className: "error", textContent: data.message }));
     } catch {
       out.replaceChildren($("p", { className: "error", textContent: "サーバに接続できませんでした。再度お試しください。" }));
     } finally {
       go.disabled = false;
     }
   });
-
-  // ⚠ First screen: verdict and what a human must decide. Checks only inside <details> (docs/adr/0004).
-  function view(e) {
-    const card = $("div", { className: "card" },
-      $("p", { className: "issue", textContent: `${e.issue.owner}/${e.issue.repo}#${e.issue.number}  ${e.title}` }),
-      $("p", { className: "verdict " + e.verdict, textContent: LABEL[e.verdict] }));
-    if (e.decisions.length === 0) {
-      card.append($("p", { textContent: "人間が決めることは見つかりませんでした。AIへ渡せます。" }));
-    } else {
-      card.append($("p", { textContent: `AIに渡す前に、人間が${e.decisions.length}つ決める必要があります。` }),
-        $("ol", {}, ...e.decisions.map((d) => $("li", { textContent: d }))));
-    }
-    card.append($("details", {},
-      $("summary", { textContent: "詳細を見る" }),
-      $("ul", { className: "checks" }, ...e.checks.map((c) => $("li", {},
-        $("span", { className: "mark-" + c.status, textContent: c.status === "met" ? "✓ " : "✗ " }),
-        c.label,
-        $("span", { className: "evidence", textContent: c.evidence }))))));
-    return card;
-  }
 </script>
 </body>
 </html>

@@ -41,11 +41,11 @@ skipped.** ⚠ **Write that check early.**
 | core/rules | No open decisions: 未決を示すラベル、またはコード・HTML コメント外の TBD / TBC / 未定 / 要検討 / 要確認 / 要相談 があれば missing | `docs/design.md` §2, `docs/research.md` §2 (Ambig-SWE) | `open-questions: a question-type label is an open decision`, `open-questions: TBD / 未定 in prose is an open decision, quoted in the decision`, `open-questions: markers inside code or HTML comments are not findings` |
 | core/rules | Issue is open（structural）: state が closed なら missing で、evidence に closed とある | `docs/design.md` §2 | `evaluate: a closed issue is NOT_READY, and issue-open says closed` |
 | core/rules | Body（structural）: 本文（コメントは見ない）が空、または見出し・HTML コメント・`_No response_` だけなら missing。コードブロックは書かれた内容として数える。met の evidence は最初の行を引用する | `docs/design.md` §2 | `evaluate: an empty body or a template with nothing filled in is NOT_READY`, `evaluate: a code block alone counts as a written body`, `evaluate: an ordinary open issue with a body is not NOT_READY, and structural checks quote what they found` |
-| app / web | URL から評価または失敗の文章を返す。`GET /` はページ、`GET /api/evaluate?url=` は JSON（成功 200 / 失敗 422） | `docs/adr/0003`, `docs/adr/0004` | `app: a URL becomes an evaluation`, `app: failures become a sentence, and 404 never claims non-existence alone`, `server: GET / serves the page; /api/evaluate returns the JSON verdict` |
+| app / web | URL から評価または失敗の文章を返す。`GET /` はページ、`GET /view.js` は描画モジュール（text/javascript）、`GET /api/evaluate?url=` は JSON（成功 200 / 失敗 422） | `docs/adr/0003`, `docs/adr/0004` | `app: a URL becomes an evaluation`, `app: failures become a sentence, and 404 never claims non-existence alone`, `server: GET / serves the page, /view.js its view module; /api/evaluate returns the JSON verdict` |
+| web/view | 結果カードの HTML を返す純粋関数。最初の画面（`<details>` より前）には判定と decision だけを出し、check の label と evidence はすべて `<details>` の中に出す。READY では decision の一覧を出さない。Issue から来た文字列はすべてエスケープする | `docs/adr/0004` | `view: the first screen shows the verdict and the decisions, and no check (docs/adr/0004)`, `view: every check label and evidence is inside 詳細を見る`, `view: READY has no decision list on the first screen`, `view: text quoted from the issue is escaped (the issue is hostile input)` |
 | boundaries | core は github/ と web/ を import しない。src/ は書き込み HTTP method を使わない | `docs/adr/0001`, `docs/adr/0003` | `boundary: src/core imports nothing from github/ or web/ (docs/adr/0003)`, `boundary: nothing in src/ uses a write HTTP method (docs/adr/0001)` |
 
-⚠ **Web UI の表示（最初の画面は判定と decision のみ、check は `<details>` 内）を assert する case はまだない。**
-⚠ **ページが `詳細を見る` を含むことだけが `server: …` で確認されている。** 描画は手動で確認した。
+⚠ **assert しているのは `view.js` が返す HTML まで。** ブラウザでの見た目（CSS、幅、テーマ）を assert する case はない。
 
 ## 2. What this deliberately does not implement
 

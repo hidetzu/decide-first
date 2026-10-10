@@ -14,6 +14,6 @@ test("boundary: src/core imports nothing from github/ or web/ (docs/adr/0003)", 
 });
 
 test("boundary: nothing in src/ uses a write HTTP method (docs/adr/0001)", () => {
-  const bad = files("src").filter((f) => f.endsWith(".ts") && /method\s*:\s*["'`](POST|PATCH|PUT|DELETE)/i.test(code(f)));
+  const bad = files("src").filter((f) => /\.(ts|js)$/.test(f) && /method\s*:\s*["'`](POST|PATCH|PUT|DELETE)/i.test(code(f)));
   assert.deepEqual(bad, []);
 });
