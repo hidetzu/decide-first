@@ -30,7 +30,7 @@
 | No open decisions — `question` / `needs-info` 等のラベル、TBD / 未定 の記述 | blocking | ✅ slice | Ambig-SWE、Sayagh "ambiguity avoidance" |
 | Goal / problem — 何を達成するかの記述 | blocking | ✅ hidetzu/decide-first#2 | Copilot docs、SWE-bench underspecification |
 | Scope / Out of scope | blocking | ✅ hidetzu/decide-first#3 | Devin docs（scope と境界）。Sayagh の scope（+16.44）は Issue の大きさの観点で、見出しの有無ではない |
-| 名指しされた依存（`blocked by owner/repo#N`）が open | blocking | 次 | 依存が閉じていないと、始められても終わらない |
+| 名指しされた依存（`blocked by owner/repo#N`）が open | blocking | ✅ hidetzu/decide-first#4, hidetzu/decide-first#18 | 依存が閉じていないと、始められても終わらない |
 | Issue が closed | structural → NOT READY | ✅ hidetzu/decide-first#1 | 閉じた仕事は渡すものではない |
 | 本文が空、またはテンプレートのみ | structural → NOT READY | ✅ hidetzu/decide-first#1 | 決める対象そのものがない |
 | 大きすぎる（独立した goal が複数 / epic） | structural → NOT READY | 後 | Ehsani: 大きい PR ほど失敗する |
@@ -86,7 +86,7 @@ GitHub Issues に分割する。各 Issue には Goal / Scope / Out of Scope / A
 
 ## 7. owner が決めたこと
 
-- **依存は「完了」で閉じたときだけ解消とみなす。取得できなかったものは解消とみなさない。取り出しは `src/core/` の純粋関数。取りに行くのは 5 件まで（仮の値）**（2026-10-10、[ADR 0009](adr/0009-a-dependency-counts-as-done-only-when-closed-as-completed.md)）。**未実装。**
+- **依存は「完了」で閉じたときだけ解消とみなす。取得できなかったものは解消とみなさない。取り出しは `src/core/` の純粋関数。取りに行くのは 5 件まで（仮の値）**（2026-10-10、[ADR 0009](adr/0009-a-dependency-counts-as-done-only-when-closed-as-completed.md)）。
 - **根拠（研究の数値。出典・範囲・相関つき）と書き方の例は、「人間が決めること」の各項目から開く**（2026-10-10、画面案を見比べて決定、[ADR 0008](adr/0008-evidence-and-an-example-open-from-each-decision.md)）。**未実装。**
 - **NOT READY のときは structural の decision だけを出す。新しい check の文言は hidetzu/decide-first#1 の計画どおり**（2026-10-10、[ADR 0006](adr/0006-not-ready-shows-only-the-structural-decisions.md)）。
 - **whyiug/issueready とは差別化して進める。名前は Decide First に変える**（2026-10-10、[ADR 0005](adr/0005-renamed-to-decide-first-and-differentiated-by-always-answering.md)）。

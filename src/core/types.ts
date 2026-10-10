@@ -13,7 +13,27 @@ export interface IssueComment {
   createdAt: string;
 }
 
-/** What the core is allowed to see. ⚠ Only what the GitHub API returned for this one issue. */
+/**
+ * What fetching one named dependency came to (docs/adr/0009). ⚠ Only `completed` resolves it:
+ * a failure to read is never taken as "done" (rules/evidence.md: could not be obtained ≠ not there).
+ */
+export type DependencyOutcome =
+  | "completed"            // closed with state_reason "completed"
+  | "open"
+  | "closed_not_completed" // closed as not_planned / duplicate, or with no reason recorded
+  | "not_found"            // ⚠ 404: missing or private, indistinguishable
+  | "rate_limited"
+  | "unreachable"
+  | "unexpected_status"
+  | "is_pull_request"
+  | "not_checked";         // beyond the fetch limit, so never asked
+
+export interface Dependency {
+  ref: IssueRef;
+  outcome: DependencyOutcome;
+}
+
+/** What the core is allowed to see. ⚠ Only what the GitHub API returned for this issue and the issues it names. */
 export interface IssueSnapshot {
   ref: IssueRef;
   url: string;
@@ -22,6 +42,8 @@ export interface IssueSnapshot {
   state: "open" | "closed";
   labels: string[];
   comments: IssueComment[];
+  /** The issues it names as dependencies, in the order named, each with what fetching it came to. */
+  dependencies: Dependency[];
 }
 
 export type CheckStatus = "met" | "missing";

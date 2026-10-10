@@ -1,8 +1,10 @@
-// Fetches the minimum the core needs for one public issue: title, body, state, labels, comments.
+// Fetches the minimum the core needs for one public issue: title, body, state, labels, comments,
+// and the state of the issues it names as dependencies.
 // ⚠ Unauthenticated by default (docs/SPEC.md §2: no OAuth). GITHUB_TOKEN, when set, only raises
 // the rate limit; it never widens what is read.
 
-import type { IssueRef, IssueSnapshot } from "../core/types.ts";
+import { extractDependencies } from "../core/dependencies.ts";
+import type { Dependency, IssueRef, IssueSnapshot } from "../core/types.ts";
 
 export type FetchFailure =
   // ⚠ GitHub answers 404 both for "no such issue" and for "private repository".
@@ -27,10 +29,15 @@ export const PER_PAGE = 100;
 //   on a partial thread: a later comment may override the body (rules/owner-decisions.md).
 export const MAX_COMMENT_PAGES = 10;
 
+// ⚠ Provisional (docs/adr/0009): unauthenticated, the API allows 60 requests an hour, and how
+//   many dependencies an issue usually names has not been measured. Beyond it: not_checked.
+export const MAX_DEPENDENCIES = 5;
+
 interface ApiIssue {
   title: string;
   body: string | null;
   state: string;
+  state_reason?: string | null;
   html_url: string;
   labels: Array<string | { name?: string }>;
   pull_request?: unknown;
@@ -87,16 +94,29 @@ export async function fetchIssue(ref: IssueRef, opts: ClientOptions = {}): Promi
     }
   }
 
-  return {
-    ok: true,
-    issue: {
-      ref,
-      url: issue.html_url,
-      title: issue.title,
-      body: issue.body ?? "",
-      state: issue.state === "closed" ? "closed" : "open",
-      labels: issue.labels.map((l) => (typeof l === "string" ? l : (l.name ?? ""))).filter(Boolean),
-      comments,
-    },
+  const snapshot: IssueSnapshot = {
+    ref,
+    url: issue.html_url,
+    title: issue.title,
+    body: issue.body ?? "",
+    state: issue.state === "closed" ? "closed" : "open",
+    labels: issue.labels.map((l) => (typeof l === "string" ? l : (l.name ?? ""))).filter(Boolean),
+    comments,
+    dependencies: [],
   };
+  const named = extractDependencies(snapshot);
+  for (const [i, dep] of named.entries()) {
+    snapshot.dependencies.push({ ref: dep, outcome: i < MAX_DEPENDENCIES ? await dependencyOutcome(dep) : "not_checked" });
+  }
+  return { ok: true, issue: snapshot };
+
+  async function dependencyOutcome(dep: IssueRef): Promise<Dependency["outcome"]> {
+    const res = await get(`${base}/repos/${encodeURIComponent(dep.owner)}/${encodeURIComponent(dep.repo)}/issues/${dep.number}`);
+    if (!(res instanceof Response)) return res.kind === "too_many_comments" ? "unexpected_status" : res.kind;
+    const d = (await res.json()) as ApiIssue;
+    if (d.pull_request) return "is_pull_request";
+    if (d.state !== "closed") return "open";
+    // ⚠ Only "completed" resolves a dependency; not_planned, duplicate and no reason do not (docs/adr/0009).
+    return d.state_reason === "completed" ? "completed" : "closed_not_completed";
+  }
 }

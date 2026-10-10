@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fetchIssue, MAX_COMMENT_PAGES } from "../src/github/client.ts";
+import { fetchIssue, MAX_COMMENT_PAGES, MAX_DEPENDENCIES } from "../src/github/client.ts";
 
 const REF = { owner: "o", repo: "r", number: 1 };
 const ISSUE = { title: "t", body: "b", state: "open", html_url: "https://github.com/o/r/issues/1", labels: [{ name: "bug" }, "x"], comments: 0 };
@@ -24,7 +24,7 @@ test("client: maps the API issue to a snapshot", async () => {
   const r = await fetchIssue(REF, { fetch: s.fetch });
   assert.deepEqual(r, {
     ok: true,
-    issue: { ref: REF, url: ISSUE.html_url, title: "t", body: "b", state: "open", labels: ["bug", "x"], comments: [] },
+    issue: { ref: REF, url: ISSUE.html_url, title: "t", body: "b", state: "open", labels: ["bug", "x"], comments: [], dependencies: [] },
   });
   assert.deepEqual(s.calls, ["https://api.github.com/repos/o/r/issues/1"], "no comment request when there are none");
 });
@@ -81,4 +81,52 @@ test("client: the token is sent only when given", async () => {
   assert.equal(seen.authorization, undefined);
   await fetchIssue(REF, { fetch: f, token: "T" });
   assert.equal(seen.authorization, "Bearer T");
+});
+
+// Dependencies: the issue names them; each is a separate GET to the issues endpoint.
+const DEP_PATH = /\/repos\/o\/r\/issues\/(\d+)$/;
+const withDeps = (body: string, dep: (n: number) => Response | Error) => stub((url) => {
+  const m = DEP_PATH.exec(url);
+  return m && m[1] !== "1" ? dep(Number(m[1])) : json({ ...ISSUE, body });
+});
+const outcomes = async (body: string, dep: (n: number) => Response | Error) => {
+  const s = withDeps(body, dep);
+  const r = await fetchIssue(REF, { fetch: s.fetch });
+  assert.ok(r.ok);
+  return { deps: r.issue.dependencies.map((d) => d.outcome), depCalls: s.calls.length - 1 };
+};
+
+test("client: a dependency's state and state_reason become its outcome", async () => {
+  const states: Record<number, object> = {
+    12: { state: "open" },
+    13: { state: "closed", state_reason: "completed" },
+    14: { state: "closed", state_reason: "not_planned" },
+    15: { state: "closed", state_reason: null },
+    16: { state: "open", pull_request: {} },
+  };
+  const r = await outcomes("Blocked by #12, #13, #14, #15, #16", (n) => json({ ...ISSUE, ...states[n] }));
+  assert.deepEqual(r.deps, ["open", "completed", "closed_not_completed", "closed_not_completed", "is_pull_request"]);
+});
+
+test("client: each way a dependency fails to load is told apart, never taken as done", async () => {
+  const fail: Record<number, Response | Error> = {
+    12: new Response("", { status: 404 }),
+    13: new Response("", { status: 403, headers: { "x-ratelimit-remaining": "0" } }),
+    14: new Error("ECONNRESET"),
+    15: new Response("", { status: 500 }),
+  };
+  const r = await outcomes("depends on #12 #13 #14 #15", (n) => fail[n]);
+  assert.deepEqual(r.deps, ["not_found", "rate_limited", "unreachable", "unexpected_status"]);
+});
+
+test("client: no dependency named means no request beyond the issue", async () => {
+  const r = await outcomes("Fix #12 and see #13.", () => { throw new Error("must not be called"); });
+  assert.deepEqual(r, { deps: [], depCalls: 0 });
+});
+
+test("client: at most MAX_DEPENDENCIES are fetched; the rest are not_checked", async () => {
+  const r = await outcomes("Blocked by #2, #3, #4, #5, #6, #7, #8", () => json({ ...ISSUE, state: "closed", state_reason: "completed" }));
+  assert.equal(MAX_DEPENDENCIES, 5);
+  assert.equal(r.depCalls, 5);
+  assert.deepEqual(r.deps, ["completed", "completed", "completed", "completed", "completed", "not_checked", "not_checked"]);
 });
