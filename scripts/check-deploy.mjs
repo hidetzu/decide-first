@@ -15,21 +15,26 @@ import { fileURLToPath } from "node:url";
 export const SERVED = [
   ["index.html", "/"],
   ["view.js", "/view.js"],
+  ["icon.svg", "/icon.svg"],
+  ["icon-512.png", "/icon-512.png"],
+  ["apple-touch-icon.png", "/apple-touch-icon.png"],
+  ["favicon.ico", "/favicon.ico"],
+  ["og.png", "/og.png"],
 ];
 /** An issue that exists, is public, and is closed for good: its verdict does not drift. */
 export const KNOWN_ISSUE = "https://github.com/hidetzu/decide-first/issues/1";
 
 /**
- * One served file against the local one.
+ * One served file against the local one, byte for byte (images are served too).
  * ⚠ `served === null` means it could not be fetched. ⚠ That is not "it is not served"
  *   (rules/evidence.md: could not be obtained ≠ not there).
- * @param {string} local
- * @param {string | null} served
+ * @param {Uint8Array} local
+ * @param {Uint8Array | null} served
  * @returns {{ ok: boolean, why: string }}
  */
 export function judgeFile(local, served) {
   if (served === null) return { ok: false, why: "取れなかった（配られていない、とは言えない）" };
-  return local === served ? { ok: true, why: "1 バイトも違わない" } : { ok: false, why: "中身が違う" };
+  return Buffer.from(local).equals(Buffer.from(served)) ? { ok: true, why: "1 バイトも違わない" } : { ok: false, why: "中身が違う" };
 }
 
 /**
@@ -52,11 +57,11 @@ export function judgeEvaluate(status, body) {
   return { ok: false, why: `判定が返らなかった（HTTP ${status}: ${String(json?.message ?? "").slice(0, 80)}）` };
 }
 
-/** @param {string} url @returns {Promise<{ status: number | null, body: string | null }>} */
+/** @param {string} url @returns {Promise<{ status: number | null, body: Uint8Array | null }>} */
 async function get(url) {
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
-    return { status: res.status, body: await res.text() };
+    return { status: res.status, body: new Uint8Array(await res.arrayBuffer()) };
   } catch {
     return { status: null, body: null };
   }
@@ -72,7 +77,7 @@ async function main() {
   }
   let failed = 0;
   for (const [file, path] of SERVED) {
-    const local = await readFile(fileURLToPath(new URL(`../public/${file}`, import.meta.url)), "utf8");
+    const local = await readFile(fileURLToPath(new URL(`../public/${file}`, import.meta.url)));
     // ⚠ ?cb=<commit>, so an edge copy from before this deploy is not read as the current one.
     const r = await get(`${origin}${path}?cb=${cb}`);
     const v = judgeFile(local, r.status === 200 ? r.body : null);
@@ -80,7 +85,7 @@ async function main() {
     console.log(`${v.ok ? "ok  " : "FAIL"} ${path} — ${v.why}${r.status !== null && r.status !== 200 ? `（HTTP ${r.status}）` : ""}`);
   }
   const e = await get(`${origin}/api/evaluate?url=${encodeURIComponent(KNOWN_ISSUE)}`);
-  const v = judgeEvaluate(e.status, e.body);
+  const v = judgeEvaluate(e.status, e.body === null ? null : new TextDecoder().decode(e.body));
   if (!v.ok) failed++;
   console.log(`${v.ok ? "ok  " : "FAIL"} /api/evaluate — ${v.why}`);
   console.log(`check-deploy: ${SERVED.length + 1 - failed} of ${SERVED.length + 1} passed`);

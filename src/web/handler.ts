@@ -4,23 +4,19 @@
 import { assess, UNREADABLE } from "../app.ts";
 import type { ClientOptions } from "../github/client.ts";
 
-/** The two files in public/. ⚠ On Workers, Cloudflare serves them itself and these are unset. */
-export interface PublicFiles {
-  page: string;
-  view: string;
-}
+/**
+ * The files in public/, by the path they are served at. ⚠ On Workers, Cloudflare serves public/
+ * itself and this is unset; only the local Node server passes it.
+ */
+export type PublicFiles = Map<string, { body: Uint8Array<ArrayBuffer>; type: string }>;
 
 const JSON_TYPE = { "content-type": "application/json; charset=utf-8" };
 
 export function createHandler(opts: ClientOptions = {}, files?: PublicFiles): (request: Request) => Promise<Response> {
   return async (request) => {
     const url = new URL(request.url);
-    if (request.method === "GET" && files && url.pathname === "/") {
-      return new Response(files.page, { headers: { "content-type": "text/html; charset=utf-8" } });
-    }
-    if (request.method === "GET" && files && url.pathname === "/view.js") {
-      return new Response(files.view, { headers: { "content-type": "text/javascript; charset=utf-8" } });
-    }
+    const file = request.method === "GET" ? files?.get(url.pathname) : undefined;
+    if (file) return new Response(file.body, { headers: { "content-type": file.type } });
     if (request.method === "GET" && url.pathname === "/api/evaluate") {
       // ⚠ Nothing thrown here may escape: on Node an unhandled rejection ends the process, and with
       //   it the page for everyone (hidetzu/decide-first#23). The person gets the same one sentence.
