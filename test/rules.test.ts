@@ -194,3 +194,21 @@ test("dependencies: a missing result carries the owner's guidance", () => {
     example: "## Dependencies\n- Depends on <owner>/<repo>#<番号>",
   });
 });
+
+// hidetzu/decide-first#21: both inputs are copied from the issues that were misjudged.
+test("open-questions: TBD inside inline code is an example, not an open decision (hidetzu/decide-first#21)", () => {
+  const r = openQuestions.run(issue({ body: "決めた文言: `結論を書き、未決の印（ラベルや TBD）を外す`" }));
+  assert.equal(r.status, "met", r.evidence);
+});
+
+test("open-questions: TBD outside inline code still counts, even on a line that has some", () => {
+  assert.equal(openQuestions.run(issue({ body: "上限: TBD（`MAX` の値）" })).status, "missing");
+  assert.equal(openQuestions.run(issue({ body: "a lone `TBD with no closing backtick" })).status, "missing");
+});
+
+test("acceptance-criteria: a task list item that is only inline code still counts", () => {
+  // ⚠ The second input is the one that guards it: with the code blanked out, nothing would be left.
+  for (const body of ["- [ ] `npm test` が通る", "- [ ] `npm test`"]) {
+    assert.equal(acceptanceCriteria.run(issue({ body })).status, "met", body);
+  }
+});
