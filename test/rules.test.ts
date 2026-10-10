@@ -5,6 +5,8 @@ import { goal } from "../src/core/rules/goal.ts";
 import { verification } from "../src/core/rules/verification.ts";
 import { openQuestions } from "../src/core/rules/open-questions.ts";
 import { scope } from "../src/core/rules/scope.ts";
+import { dependencies } from "../src/core/rules/dependencies.ts";
+import type { DependencyOutcome } from "../src/core/types.ts";
 import { comment, issue } from "./helpers.ts";
 
 test("acceptance-criteria: met by a non-empty heading, in English or Japanese", () => {
@@ -141,4 +143,54 @@ test("scope: a missing result carries the owner's guidance, with no number", () 
     example: "## Scope\n<変更してよいファイル・機能>\n## Out of Scope\n<触れてはいけないもの>",
   });
   assert.doesNotMatch(`${r.guidance!.grounds} ${r.guidance!.source}`, /[\d%]/);
+});
+
+const dep = (number: number, outcome: DependencyOutcome) => ({ ref: { owner: "o", repo: "r", number }, outcome });
+
+test("dependencies: an open dependency is missing, named in the evidence and the decision", () => {
+  const r = dependencies.run(issue({ dependencies: [dep(12, "open")] }));
+  assert.equal(r.status, "missing");
+  assert.match(r.evidence, /o\/r#12（まだ open）/);
+  assert.equal(r.decision, "依存している o/r#12 の完了を待つか、依存を外すか");
+});
+
+test("dependencies: met when none are named, or all are closed as completed", () => {
+  assert.equal(dependencies.run(issue({})).status, "met");
+  assert.equal(dependencies.run(issue({ dependencies: [dep(12, "completed"), dep(13, "completed")] })).status, "met");
+});
+
+test("dependencies: closed but not as completed does not resolve it (docs/adr/0009)", () => {
+  const r = dependencies.run(issue({ dependencies: [dep(12, "closed_not_completed")] }));
+  assert.equal(r.status, "missing");
+  assert.match(r.evidence, /完了ではない/);
+});
+
+test("dependencies: each way of failing to read one is missing, and says something different", () => {
+  const kinds: DependencyOutcome[] = ["not_found", "rate_limited", "unreachable", "unexpected_status", "is_pull_request"];
+  const evidence = kinds.map((k) => {
+    const r = dependencies.run(issue({ dependencies: [dep(12, k)] }));
+    assert.equal(r.status, "missing", k);
+    return r.evidence;
+  });
+  assert.equal(new Set(evidence).size, kinds.length, evidence.join(" | "));
+});
+
+test("dependencies: two unresolved are one decision listing both", () => {
+  const r = dependencies.run(issue({ dependencies: [dep(12, "open"), dep(13, "not_found")] }));
+  assert.equal(r.decision, "依存している o/r#12、o/r#13 の完了を待つか、依存を外すか");
+});
+
+test("dependencies: beyond the limit is unresolved, and the evidence says how many were checked", () => {
+  const r = dependencies.run(issue({ dependencies: [1, 2, 3, 4, 5].map((n) => dep(n, "completed")).concat([dep(6, "not_checked"), dep(7, "not_checked")]) }));
+  assert.equal(r.status, "missing");
+  assert.match(r.evidence, /依存 7 件中 5 件だけ確認しました/);
+  assert.match(r.decision!, /o\/r#6、o\/r#7/);
+});
+
+test("dependencies: a missing result carries the owner's guidance", () => {
+  assert.deepEqual(dependencies.run(issue({ dependencies: [dep(12, "open")] })).guidance, {
+    grounds: "依存が終わっていない Issue は、始められても終えられません。",
+    source: "Decide First の判定基準（研究の数値ではない）",
+    example: "## Dependencies\n- Depends on <owner>/<repo>#<番号>",
+  });
 });

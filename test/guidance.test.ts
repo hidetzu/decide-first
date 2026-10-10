@@ -6,8 +6,8 @@ import { render } from "../src/render-text.ts";
 import { renderEvaluation } from "../src/web/view.js";
 import { issue } from "./helpers.ts";
 
-// Every check missing at once: closed, template-only body, and a question label.
-const ALL_MISSING = issue({ state: "closed", body: "## Goal\n<!-- -->", labels: ["question"] });
+// Every check missing at once: closed, template-only body, a question label, and an open dependency.
+const ALL_MISSING = issue({ state: "closed", body: "## Goal\n<!-- -->", labels: ["question"], dependencies: [{ ref: { owner: "o", repo: "r", number: 2 }, outcome: "open" }] });
 const results = () => DEFAULT_CHECKS.map((c) => c.run(ALL_MISSING));
 
 test("guidance: every missing check carries grounds, a source and an example; met checks carry none", () => {

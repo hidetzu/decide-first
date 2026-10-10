@@ -16,7 +16,7 @@ test("evaluate: all checks met -> READY with no decisions", () => {
 test("evaluate: any missing -> NEEDS_CLARIFICATION, one decision per missing check, in order", () => {
   const e = evaluate(issue({ body: "Please fix the login." }), DEFAULT_CHECKS);
   assert.equal(e.verdict, "NEEDS_CLARIFICATION");
-  assert.deepEqual(e.checks.filter((c) => c.kind === "blocking").map((c) => c.status), ["missing", "missing", "missing", "missing", "met"]);
+  assert.deepEqual(e.checks.filter((c) => c.kind === "blocking").map((c) => c.status), ["missing", "missing", "missing", "missing", "met", "met"]);
   assert.equal(e.decisions.length, 4);
   assert.match(e.decisions[0], /この Issue で達成すること/);
   assert.match(e.decisions[1], /変更してよい範囲と、触れてはいけない範囲/);
