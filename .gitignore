@@ -16,3 +16,7 @@
 
 # Dependencies
 node_modules/
+
+# wrangler (docs/adr/0010): the dry-run bundle and its local state
+dist/
+.wrangler/

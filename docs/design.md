@@ -80,7 +80,7 @@ URL ─ github/url.ts ─ github/client.ts ─(IssueSnapshot)─ core/evaluate.t
 5. 取得失敗はすべて文章で返る: URL 不正 / PR / 404 / rate limit / 接続不可 / 想定外のステータス。
 6. この repository の Issue は、`ready-for-ai` を付ける時点で Decide First にかけ、Issue is open 以外に missing がない。
    - 2026-10-10 に書き換えた（owner の決定）。元は「Decide First 自身にかけて READY になる」だった。close した Issue は設計上 NOT READY になるので、close したあとでは測れなかった。
-7. Web は Cloudflare Workers で公開する（[ADR 0010](adr/0010-publish-on-cloudflare-workers-with-a-bundling-step.md)）。
+7. Web は Cloudflare Workers で、`https://decide-first.hidetzu.work` として公開する（[ADR 0010](adr/0010-publish-on-cloudflare-workers-with-a-bundling-step.md)）。
 
 ## 6. 実装の単位
 

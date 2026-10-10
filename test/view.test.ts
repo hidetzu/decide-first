@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { renderEvaluation } from "../src/web/view.js";
+import { renderEvaluation } from "../public/view.js";
 import type { CheckResult, Evaluation } from "../src/core/types.ts";
 
 const check = (id: string, label: string, status: "met" | "missing", evidence: string): CheckResult =>

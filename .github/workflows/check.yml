@@ -1,4 +1,5 @@
-# The fast tier and the docs check, on every PR and on main (.claude/skills/verify/SKILL.md).
+# The fast tier and the docs check on every PR and on main (.claude/skills/verify/SKILL.md),
+# the Worker bundle on every PR, and the deploy on main only (docs/adr/0010).
 # ⚠ The external tier (node src/cli.ts against GitHub's real API) is not run here: its result
 #   depends on GitHub being up and on the shared rate limit, so it cannot assert our correctness
 #   (.claude/rules/verification.md).
@@ -9,23 +10,104 @@ on:
   push:
     branches: [main]
 
+# ⚠ Read-only by default. The repository is public, so a fork's PR can run this workflow; it gets
+#   no write permission and no secret. Only the deploy job widens this.
 permissions:
   contents: read
 
+env:
+  # ⚠ wrangler's version is decided here and nowhere else (docs/adr/0010). `npx wrangler` alone
+  #   would pull whatever is newest that day, changing the tool without a diff here.
+  WRANGLER_VERSION: "4.127.1"
+
+# ⚠ Actions are pinned to a commit SHA, not a tag: a tag can be moved, and the code behind it
+#   would change without a diff here. To upgrade, change the SHA; the upgrade then shows in a diff.
+#   test/deploy.test.ts fails when a `uses:` is not pinned.
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
         # The lower bound of package.json "engines", and the current LTS.
         node: ["22.18", "24"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
       - run: npm run check
       - run: node .claude/tools/docs-check.mjs
+
+  # ⚠ Proves the Worker still bundles, on every PR, with no secret: --dry-run builds and uploads
+  #   nothing, and this job has no Cloudflare credential to upload with.
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: "24"
+      - run: npx --yes wrangler@${{ env.WRANGLER_VERSION }} deploy --dry-run --outdir dist
+
+  # ⚠ Publishes only after every check above is green, and only on push to main (docs/adr/0010).
+  #   Approving the merge to main is what approves the deploy.
+  # ⚠ Never on a PR: a fork's PR must not reach the secrets (pull_request gets none anyway; the
+  #   condition closes it a second time).
+  # ⚠ Cloudflare's own Workers Builds must stay off, or it publishes without waiting for this
+  #   (docs/adr/0010). Nothing here can check that; the owner does.
+  deploy:
+    needs: [check, bundle]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # One deploy at a time; a later push waits instead of racing this one.
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    # ⚠ The one job that may write: it creates the version tag.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: "24"
+
+      - name: Deploy the Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --yes wrangler@${{ env.WRANGLER_VERSION }} deploy
+
+      # ⚠ "The deploy succeeded" is not "it is being served". Fetch it and compare (scripts/check-deploy.mjs).
+      # ⚠ SITE_ORIGIN is a repository variable the owner sets after the first deploy
+      #   (hidetzu/decide-first#27); unset, the script says so and fails.
+      - name: Check what is served
+        run: node scripts/check-deploy.mjs --origin=${{ vars.SITE_ORIGIN }} --cb=${{ github.sha }}
+
+      # ⚠ Only after it is confirmed served: tagging first would mark something not served as released.
+      # ⚠ The version is read from package.json, once; nothing here writes a number.
+      # ⚠ An existing tag is never moved: whoever saw it before would see different contents.
+      # ⚠ persist-credentials is false, so there is no `git push`; the tag is made through the API.
+      - name: Tag the version that is served
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v="v$(node -p "require('./package.json').version")"
+          if gh api "repos/${{ github.repository }}/git/ref/tags/$v" >/dev/null 2>&1; then
+            echo "$v already exists; not moved. Was the version bumped?"
+            exit 0
+          fi
+          gh api "repos/${{ github.repository }}/git/refs" -f ref="refs/tags/$v" -f sha="${{ github.sha }}" >/dev/null
+          echo "tagged $v at ${{ github.sha }}"
