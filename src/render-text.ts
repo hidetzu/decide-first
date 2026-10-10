@@ -13,7 +13,13 @@ export function render(e: Evaluation): string {
     lines.push("人間が決めることは見つかりませんでした。AIへ渡せます。");
   } else {
     lines.push(`AIに渡す前に、人間が${e.decisions.length}つ決める必要があります。`, "");
-    e.decisions.forEach((d, i) => lines.push(`${i + 1}. ${d}`));
+    e.decisions.forEach((d, i) => {
+      lines.push(`${i + 1}. ${d}`);
+      // The web UI folds these under each decision; text has no folding, so they follow it, indented.
+      const g = e.checks.find((c) => c.status === "missing" && c.decision === d)?.guidance;
+      if (!g) return;
+      lines.push(`   根拠: ${g.grounds}`, `   出典: ${g.source}`, "   例:", ...g.example.split("\n").map((l) => `     ${l}`));
+    });
   }
   lines.push("", "詳細:");
   for (const c of e.checks) lines.push(`  ${c.status === "met" ? "✓" : "✗"} ${c.label} — ${c.evidence}`);

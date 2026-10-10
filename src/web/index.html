@@ -39,6 +39,18 @@
   .checks li { padding: 6px 0; }
   .mark-met { color: var(--ready); } .mark-missing { color: var(--not); }
   .evidence { display: block; color: var(--muted); font-size: .85rem; padding-left: 1.4em; }
+  /* Each decision opens to its grounds and a template (docs/adr/0008). */
+  ol { display: grid; gap: 6px; }
+  details.decision { margin: 0; border: 0; padding: 0; }
+  details.decision summary { list-style: none; display: block; color: var(--fg); }
+  details.decision summary::-webkit-details-marker { display: none; }
+  details.decision summary::after { content: "根拠と例 ▸"; margin-left: 6px; font-size: .75rem; color: var(--accent); white-space: nowrap; }
+  details.decision[open] summary::after { content: "閉じる ▾"; }
+  details.decision summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  .grounds { display: block; color: var(--muted); font-size: .85rem; margin-top: 4px; }
+  .source { display: block; color: var(--muted); font-size: .75rem; }
+  .example { margin: 6px 0 0; padding: 8px 10px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
+             font: .8rem/1.5 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
   .error { color: var(--not); }
 </style>
 </head>

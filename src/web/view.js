@@ -5,6 +5,7 @@
 
 /** @typedef {import("../core/types.ts").Evaluation} Evaluation */
 /** @typedef {import("../core/types.ts").Verdict} Verdict */
+/** @typedef {import("../core/types.ts").CheckResult} CheckResult */
 
 /** @type {Record<Verdict, string>} */
 const LABEL = { READY: "🟢 READY", NEEDS_CLARIFICATION: "🟡 NEEDS CLARIFICATION", NOT_READY: "🔴 NOT READY" };
@@ -18,6 +19,21 @@ const LABEL = { READY: "🟢 READY", NEEDS_CLARIFICATION: "🟡 NEEDS CLARIFICAT
 const text = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/ /g, "&nbsp;");
 
 /**
+ * One decision. With guidance it opens to show the grounds and a template; the grounds stay inside
+ * that <details> so the closed first screen is still verdict and decisions only (docs/adr/0008).
+ * @param {string} d
+ * @param {CheckResult | undefined} c the missing check the decision came from
+ */
+const decision = (d, c) => {
+  const g = c?.guidance;
+  if (!g) return `<li>${text(d)}</li>`;
+  return `<li><details class="decision"><summary>${text(d)}</summary>` +
+    `<span class="grounds">根拠: ${text(g.grounds)}</span>` +
+    `<span class="source">出典: ${text(g.source)}</span>` +
+    `<pre class="example">${text(g.example)}</pre></details></li>`;
+};
+
+/**
  * @param {Evaluation} e
  * @returns {string}
  */
@@ -28,7 +44,7 @@ export function renderEvaluation(e) {
   const decisions = e.decisions.length === 0
     ? "<p>人間が決めることは見つかりませんでした。AIへ渡せます。</p>"
     : `<p>AIに渡す前に、人間が${e.decisions.length}つ決める必要があります。</p>` +
-      `<ol>${e.decisions.map((d) => `<li>${text(d)}</li>`).join("")}</ol>`;
+      `<ol>${e.decisions.map((d) => decision(d, e.checks.find((c) => c.status === "missing" && c.decision === d))).join("")}</ol>`;
   const checks = e.checks.map((c) =>
     `<li><span class="mark-${c.status}">${c.status === "met" ? "✓ " : "✗ "}</span>${text(c.label)}` +
     `<span class="evidence">${text(c.evidence)}</span></li>`).join("");

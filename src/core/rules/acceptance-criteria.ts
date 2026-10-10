@@ -1,4 +1,4 @@
-import type { Check } from "../types.ts";
+import type { Check, Guidance } from "../types.ts";
 import { findSection, firstLine } from "./find.ts";
 
 // Grounds: GitHub Copilot coding agent docs ask for "complete acceptance criteria";
@@ -6,6 +6,13 @@ import { findSection, firstLine } from "./find.ts";
 const NAMES = ["acceptance criteria", "acceptance", "done when", "definition of done", "expected behavior", "expected behaviour", "expected vs actual", "expected and actual", "expected result", "受け入れ条件", "受入条件", "完了条件", "期待する動作", "期待される動作", "期待結果"];
 // A GitHub task list item: `- [ ] ...` / `* [x] ...`.
 const TASK = /^\s*[-*+]\s+\[[ xX]\]\s+\S/;
+
+// Wording settled by the owner on hidetzu/decide-first#12 (docs/adr/0008). ⚠ Do not reword here.
+const GUIDANCE: Guidance = {
+  grounds: "期待する動作がよく書かれた Issue は、merge 率が 10.7 ポイント高かった。",
+  source: "Sayagh 2025・Copilot の PR 3,180 件・相関",
+  example: "## Acceptance Criteria\n- [ ] <入力・操作> のとき <観測できる結果> になる",
+};
 
 export const acceptanceCriteria: Check = {
   id: "acceptance-criteria",
@@ -22,6 +29,7 @@ export const acceptanceCriteria: Check = {
       status: "missing",
       evidence: "「Acceptance Criteria」「受け入れ条件」「Expected behavior」等の見出しも、チェックリスト（- [ ]）も見つかりませんでした",
       decision: "完了と判断する条件（何がどうなっていれば完了か）",
+      guidance: GUIDANCE,
     };
   },
 };

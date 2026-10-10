@@ -43,8 +43,23 @@ export interface CheckResult {
   evidence: string;
   /** What a human has to decide when this is missing. Unset when met. */
   decision?: string;
+  /**
+   * Why the decision matters, where that comes from, and a template to fill in (docs/adr/0008).
+   * Set with the decision, unset when met. ⚠ Only figures docs/research.md records; where the
+   * source has none, the grounds say so instead of borrowing a nearby one.
+   */
+  guidance?: Guidance;
   /** Which kind of evaluator produced it. Only "rule" exists today (docs/adr/0002). */
   source: "rule" | "semantic";
+}
+
+export interface Guidance {
+  /** One short sentence a human reads first. */
+  grounds: string;
+  /** Source, scope and whether it is a correlation, shown as a smaller line. */
+  source: string;
+  /** A template with `<…>` placeholders. ⚠ Never text written for this issue (docs/adr/0001). */
+  example: string;
 }
 
 export type Verdict = "READY" | "NEEDS_CLARIFICATION" | "NOT_READY";
