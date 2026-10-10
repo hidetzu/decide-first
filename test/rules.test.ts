@@ -4,6 +4,7 @@ import { acceptanceCriteria } from "../src/core/rules/acceptance-criteria.ts";
 import { goal } from "../src/core/rules/goal.ts";
 import { verification } from "../src/core/rules/verification.ts";
 import { openQuestions } from "../src/core/rules/open-questions.ts";
+import { scope } from "../src/core/rules/scope.ts";
 import { comment, issue } from "./helpers.ts";
 
 test("acceptance-criteria: met by a non-empty heading, in English or Japanese", () => {
@@ -95,4 +96,49 @@ test("goal: found in a comment, and the evidence names the comment", () => {
 test("goal: Goals and non-goals counts, Goalkeeper does not", () => {
   assert.equal(goal.run(issue({ body: "## Goals and non-goals\nship X, not Y" })).status, "met");
   assert.equal(goal.run(issue({ body: "## Goalkeeper\nnot a goal" })).status, "missing");
+});
+
+test("scope: met when both Scope and Out of Scope have content, and the evidence names both", () => {
+  const r = scope.run(issue({ body: "## Scope\n- src/a.ts\n## Out of Scope\n- src/b.ts" }));
+  assert.equal(r.status, "met");
+  assert.match(r.evidence, /「Scope」/);
+  assert.match(r.evidence, /「Out of Scope」/);
+});
+
+test("scope: Scope alone is missing, and the decision names the Out of Scope side", () => {
+  const r = scope.run(issue({ body: "## Scope\n- src/a.ts" }));
+  assert.equal(r.status, "missing");
+  assert.equal(r.decision, "触れてはいけない範囲（Out of Scope）");
+});
+
+test("scope: Out of Scope alone is missing, and the decision names the side that may change", () => {
+  const r = scope.run(issue({ body: "## Out of Scope\n- src/b.ts" }));
+  assert.equal(r.status, "missing");
+  assert.equal(r.decision, "変更してよい範囲");
+});
+
+test("scope: neither is still one decision, naming both", () => {
+  const r = scope.run(issue({ body: "Please fix the login." }));
+  assert.equal(r.status, "missing");
+  assert.equal(r.decision, "変更してよい範囲と、触れてはいけない範囲（Out of Scope）");
+});
+
+test("scope: Non-goals counts as Out of Scope", () => {
+  assert.equal(scope.run(issue({ body: "## Scope\nx\n## Non-goals\ny" })).status, "met");
+});
+
+test("scope: an Out of Scope heading is not taken for the Scope side", () => {
+  const r = scope.run(issue({ body: "## Out of Scope\n- src/b.ts\n## Out-of-scope\n- more" }));
+  assert.equal(r.status, "missing");
+  assert.equal(r.decision, "変更してよい範囲");
+});
+
+test("scope: a missing result carries the owner's guidance, with no number", () => {
+  const r = scope.run(issue({ body: "x" }));
+  assert.deepEqual(r.guidance, {
+    grounds: "研究の数値はありません。",
+    source: "Devin のガイドが scope と境界を書くよう求めている",
+    example: "## Scope\n<変更してよいファイル・機能>\n## Out of Scope\n<触れてはいけないもの>",
+  });
+  assert.doesNotMatch(`${r.guidance!.grounds} ${r.guidance!.source}`, /[\d%]/);
 });

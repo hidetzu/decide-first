@@ -15,7 +15,7 @@ test("guidance: every missing check carries grounds, a source and an example; me
     assert.equal(r.status, "missing", r.id);
     assert.ok(r.guidance?.grounds && r.guidance.source && r.guidance.example, r.id);
   }
-  const met = evaluate(issue({ body: "## Goal\nx\n## Acceptance Criteria\n- [ ] a\n## Verify\nnpm test" }), DEFAULT_CHECKS);
+  const met = evaluate(issue({ body: "## Goal\nx\n## Scope\nsrc/a.ts\n## Out of Scope\nsrc/b.ts\n## Acceptance Criteria\n- [ ] a\n## Verify\nnpm test" }), DEFAULT_CHECKS);
   for (const r of met.checks) assert.equal(r.guidance, undefined, r.id);
 });
 

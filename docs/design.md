@@ -29,7 +29,7 @@
 | Verification — 確認方法・再現手順の見出し | blocking | ✅ slice | Sayagh "validation guidance"、Devin docs |
 | No open decisions — `question` / `needs-info` 等のラベル、TBD / 未定 の記述 | blocking | ✅ slice | Ambig-SWE、Sayagh "ambiguity avoidance" |
 | Goal / problem — 何を達成するかの記述 | blocking | ✅ hidetzu/decide-first#2 | Copilot docs、SWE-bench underspecification |
-| Scope / Out of scope | blocking | 次 | Sayagh scope (+16.4%) |
+| Scope / Out of scope | blocking | ✅ hidetzu/decide-first#3 | Devin docs（scope と境界）。Sayagh の scope（+16.44）は Issue の大きさの観点で、見出しの有無ではない |
 | 名指しされた依存（`blocked by owner/repo#N`）が open | blocking | 次 | 依存が閉じていないと、始められても終わらない |
 | Issue が closed | structural → NOT READY | ✅ hidetzu/decide-first#1 | 閉じた仕事は渡すものではない |
 | 本文が空、またはテンプレートのみ | structural → NOT READY | ✅ hidetzu/decide-first#1 | 決める対象そのものがない |
