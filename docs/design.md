@@ -86,6 +86,7 @@ GitHub Issues に分割する。各 Issue には Goal / Scope / Out of Scope / A
 
 ## 7. owner が決めたこと
 
+- **依存は「完了」で閉じたときだけ解消とみなす。取得できなかったものは解消とみなさない。取り出しは `src/core/` の純粋関数。取りに行くのは 5 件まで（仮の値）**（2026-10-10、[ADR 0009](adr/0009-a-dependency-counts-as-done-only-when-closed-as-completed.md)）。**未実装。**
 - **根拠（研究の数値。出典・範囲・相関つき）と書き方の例は、「人間が決めること」の各項目から開く**（2026-10-10、画面案を見比べて決定、[ADR 0008](adr/0008-evidence-and-an-example-open-from-each-decision.md)）。**未実装。**
 - **NOT READY のときは structural の decision だけを出す。新しい check の文言は hidetzu/decide-first#1 の計画どおり**（2026-10-10、[ADR 0006](adr/0006-not-ready-shows-only-the-structural-decisions.md)）。
 - **whyiug/issueready とは差別化して進める。名前は Decide First に変える**（2026-10-10、[ADR 0005](adr/0005-renamed-to-decide-first-and-differentiated-by-always-answering.md)）。
