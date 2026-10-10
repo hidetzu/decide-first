@@ -167,4 +167,4 @@ a row with a test is a wall.
 
 | What happened | What to do instead |
 |---|---|
-| — | — |
+| 2026-10-10: このリポジトリの Issue 全 7 件を判定したら、2 件を誤判定した。インラインコードに書いた例（`depends on other/repo#3`、`… TBD …`）を、本物の依存と未決の印として読んでいた（hidetzu/decide-first#21） | Issue のテキストから所見を拾う rule は、コードブロック・HTML コメント・インラインコードの中を読まない。⚠ ただし、インラインコードだけのチェックリスト項目は項目として数える。テスト: `open-questions: TBD inside inline code is an example, not an open decision (hidetzu/decide-first#21)`、`dependencies: an example in inline code is not a dependency (hidetzu/decide-first#21)`、`acceptance-criteria: a task list item that is only inline code still counts` |

@@ -43,9 +43,27 @@ export function proseLines(text: string): string[] {
   return out;
 }
 
-export function firstLine(issue: IssueSnapshot, re: RegExp): { where: string; line: string } | null {
+// A code span: a run of backticks, then the shortest text up to a run of the same length
+// (CommonMark). ⚠ A lone backtick opens nothing, so `TBD with no closer is still read.
+const CODE_SPAN = /(`+)(.+?)(?<!`)\1(?!`)/g;
+
+/**
+ * The line with its inline code spans blanked out. hidetzu/decide-first#21: an example quoted in
+ * backticks (`depends on other/repo#3`, `… TBD …`) was read as a real dependency and a real open
+ * question. ⚠ Only for findings that would be wrong to take from an example; a task list item
+ * that is only code (`- [ ] \`npm test\``) still counts as a task.
+ */
+export function withoutInlineCode(line: string): string {
+  return line.replace(CODE_SPAN, (m) => " ".repeat(m.length));
+}
+
+export function firstLine(
+  issue: IssueSnapshot,
+  re: RegExp,
+  opts: { skipInlineCode?: boolean } = {},
+): { where: string; line: string } | null {
   for (const p of places(issue)) {
-    const line = proseLines(p.text).find((l) => re.test(l));
+    const line = proseLines(p.text).find((l) => re.test(opts.skipInlineCode ? withoutInlineCode(l) : l));
     if (line !== undefined) return { where: p.where, line: line.trim() };
   }
   return null;

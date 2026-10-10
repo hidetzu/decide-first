@@ -1,7 +1,7 @@
 // Pulls the issues an issue names as its dependencies out of its body and comments.
 // ⚠ Pure: text in, references out. Fetching them is src/github/'s job (hidetzu/decide-first#18);
 //   this lives in core so both sides can use it without a new layer (docs/adr/0009).
-import { proseLines } from "./rules/find.ts";
+import { proseLines, withoutInlineCode } from "./rules/find.ts";
 import type { IssueRef, IssueSnapshot } from "./types.ts";
 
 // `blocked by`, `depends on` (optionally followed by a colon), or `依存:`. Case-insensitive.
@@ -35,7 +35,8 @@ export function extractDependencies(issue: IssueSnapshot): IssueRef[] {
   const seen = new Set([key(issue.ref)]);
   const out: IssueRef[] = [];
   for (const text of [issue.body, ...issue.comments.map((c) => c.body)]) {
-    for (const line of proseLines(text)) {
+    // ⚠ Not inside inline code either: an example quoted in backticks is not a dependency (hidetzu/decide-first#21).
+    for (const line of proseLines(text).map(withoutInlineCode)) {
       for (const k of line.matchAll(KEYWORD)) {
         for (const r of refsAfter(line.slice(k.index + k[0].length), issue.ref)) {
           if (!seen.has(key(r))) {

@@ -44,3 +44,15 @@ test("dependencies: none named gives an empty list", () => {
 test("dependencies: a pull request URL is not a dependency", () => {
   assert.deepEqual(deps("Blocked by https://github.com/a/b/pull/4"), []);
 });
+
+// hidetzu/decide-first#21: copied from the acceptance criteria of hidetzu/decide-first#4, which named
+// an example in backticks and was judged to depend on it.
+test("dependencies: an example in inline code is not a dependency (hidetzu/decide-first#21)", () => {
+  assert.deepEqual(deps("AC: `depends on other/repo#3` → 3 件"), []);
+  assert.deepEqual(deps("例: ``Blocked by `#4` here``"), []);
+});
+
+test("dependencies: outside inline code still counts, even on a line that has some", () => {
+  assert.deepEqual(deps("`example` depends on #5"), [at(5)]);
+  assert.deepEqual(deps("depends on #6 (see `x`)"), [at(6)]);
+});

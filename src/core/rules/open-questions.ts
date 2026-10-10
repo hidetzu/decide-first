@@ -24,7 +24,8 @@ export const openQuestions: Check = {
     if (label) {
       return { ...base, status: "missing", evidence: `ラベル「${label}」が付いています`, decision: `ラベル「${label}」が示す未決事項への結論`, guidance: GUIDANCE };
     }
-    const hit = firstLine(issue, MARKER);
+    // ⚠ Not inside inline code: an example quoted in backticks is not an open question (hidetzu/decide-first#21).
+    const hit = firstLine(issue, MARKER, { skipInlineCode: true });
     if (hit) {
       return { ...base, status: "missing", evidence: `${hit.where}に「${hit.line}」`, decision: `未決のまま残っている点: 「${hit.line.slice(0, 80)}」`, guidance: GUIDANCE };
     }
