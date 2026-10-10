@@ -3,6 +3,8 @@
 **この GitHub Issue を AI Coding Agent へ渡して大丈夫か？** — その 1 つの問いにだけ答え、
 渡す前に **人間が先に決めること** を示します。
 
+**Web 版: <https://decide-first.hidetzu.work>** — Issue の URL を貼るだけで使えます（public repository の Issue のみ）。
+
 ```text
 cli/cli#14627  `gh` fails with obscure errors when access token misses some permissionts
 
