@@ -164,8 +164,9 @@ another issue / widening scope / deciding the spec or the behaviour
 not on the green tick.** ⚠ **The PR remains, so it stays readable afterwards.**
 
 ⚠ **This is the [`git.md`](../../rules/git.md) exception, made explicit and confined to the
-controller.** ⚠ **Used standalone, every skill still takes permission every time.**
-⚠ **Push and PR are covered here. ⚠ Merge is covered nowhere.**
+controller.** ⚠ **Used standalone, every skill still takes permission for the merge every time.**
+⚠ **The PR is covered here; push to a working branch needs no permission anywhere (`git.md`).
+⚠ Merge is covered nowhere.**
 
 ### ⚠ Stop and ask, mid-run, whenever this appears
 
