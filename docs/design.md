@@ -14,7 +14,7 @@
 |---|---|---|
 | 🟢 READY | 人間が決めることが見つからない | blocking な check がすべて met |
 | 🟡 NEEDS CLARIFICATION | 人間がいくつか決めれば渡せる | blocking な check のどれかが missing |
-| 🔴 NOT READY | 答えを足すだけでは足りず、Issue の作り直し（分割・書き直し）か、人間の仕事にする判断が要る | 構造的な check のどれかが該当（**未実装**） |
+| 🔴 NOT READY | 答えを足すだけでは足りず、Issue の作り直し（分割・書き直し）か、人間の仕事にする判断が要る | structural な check のどれかが missing。decision は structural のものだけ出す（[ADR 0006](adr/0006-not-ready-shows-only-the-structural-decisions.md)） |
 
 - 各 check の結果は `met` か `missing` で、必ず **evidence**（見つけた行、または探したもの）を持つ。
 - `missing` の check は **decision**（人間が決めること）を 1 つ持つ。
@@ -31,8 +31,8 @@
 | Goal / problem — 何を達成するかの記述 | blocking | 次 | Copilot docs、SWE-bench underspecification |
 | Scope / Out of scope | blocking | 次 | Sayagh scope (+16.4%) |
 | 名指しされた依存（`blocked by owner/repo#N`）が open | blocking | 次 | 依存が閉じていないと、始められても終わらない |
-| Issue が closed | structural → NOT READY | 次 | 閉じた仕事は渡すものではない |
-| 本文が空、またはテンプレートのみ | structural → NOT READY | 次 | 決める対象そのものがない |
+| Issue が closed | structural → NOT READY | ✅ hidetzu/decide-first#1 | 閉じた仕事は渡すものではない |
+| 本文が空、またはテンプレートのみ | structural → NOT READY | ✅ hidetzu/decide-first#1 | 決める対象そのものがない |
 | 大きすぎる（独立した goal が複数 / epic） | structural → NOT READY | 後 | Ehsani: 大きい PR ほど失敗する |
 | Sensitive（security / incident ラベル） | structural → NOT READY | 後 | Copilot docs: 人間に残す仕事 |
 | Relevant artifacts — ファイルパスやシンボル | **advisory**（判定に影響しない） | 後 | Copilot docs: agent が自力で見つけられることが多い |
@@ -86,4 +86,5 @@ GitHub Issues に分割する。各 Issue には Goal / Scope / Out of Scope / A
 
 ## 7. owner が決めたこと
 
+- **NOT READY のときは structural の decision だけを出す。新しい check の文言は hidetzu/decide-first#1 の計画どおり**（2026-10-10、[ADR 0006](adr/0006-not-ready-shows-only-the-structural-decisions.md)）。
 - **whyiug/issueready とは差別化して進める。名前は Decide First に変える**（2026-10-10、[ADR 0005](adr/0005-renamed-to-decide-first-and-differentiated-by-always-answering.md)）。
