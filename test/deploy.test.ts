@@ -7,9 +7,10 @@ import worker, { WORKER_MAX_COMMENT_PAGES } from "../src/worker.ts";
 import { PER_PAGE } from "../src/github/client.ts";
 
 test("deploy: a file that could not be fetched is not called absent, and differs from a changed one", () => {
-  const a = judgeFile("x", null);
-  const b = judgeFile("x", "y");
-  const c = judgeFile("x", "x");
+  const bytes = (...v: number[]) => new Uint8Array(v);
+  const a = judgeFile(bytes(1, 2), null);
+  const b = judgeFile(bytes(0x89, 0x50, 0x00), bytes(0x89, 0x50, 0x01)); // one byte of a PNG differs
+  const c = judgeFile(bytes(0x89, 0x50, 0x00), bytes(0x89, 0x50, 0x00));
   assert.deepEqual([a.ok, b.ok, c.ok], [false, false, true]);
   assert.match(a.why, /取れなかった/);
   assert.match(b.why, /中身が違う/);
@@ -52,7 +53,11 @@ test("worker: the GITHUB_TOKEN secret reaches GitHub as the authorization header
 
 test("handler: routes, with and without the public files", async () => {
   const github = (async () => new Response(JSON.stringify({ title: "t", body: "", state: "open", html_url: "u", labels: [], comments: 0 }))) as unknown as typeof fetch;
-  const withFiles = createHandler({ fetch: github }, { page: "<p>page</p>", view: "export {}" });
+  const enc = (t: string) => new TextEncoder().encode(t);
+  const withFiles = createHandler({ fetch: github }, new Map([
+    ["/", { body: enc("<p>page</p>"), type: "text/html; charset=utf-8" }],
+    ["/view.js", { body: enc("export {}"), type: "text/javascript; charset=utf-8" }],
+  ]));
   const get = (h: typeof withFiles, path: string) => h(new Request("http://x" + path));
   assert.equal(await (await get(withFiles, "/")).text(), "<p>page</p>");
   assert.match((await get(withFiles, "/view.js")).headers.get("content-type") ?? "", /^text\/javascript/);
@@ -90,4 +95,25 @@ test("worker: reads at most WORKER_MAX_COMMENT_PAGES of comments, then declines 
   } finally {
     globalThis.fetch = orig;
   }
+});
+
+// hidetzu/decide-first#37: what a listing site or a shared link reads from the page.
+test("page: carries a description, OGP with an absolute image URL, a twitter card, and icons", () => {
+  const html = readFileSync("public/index.html", "utf8");
+  assert.match(html, /<meta name="description" content="[^"]+">/);
+  assert.match(html, /<meta property="og:image" content="https:\/\/decide-first\.hidetzu\.work\/og\.png">/);
+  assert.match(html, /<meta name="twitter:card" content="summary_large_image">/);
+  assert.match(html, /<link rel="icon" href="\/icon\.svg"/);
+  assert.match(html, /<link rel="icon" href="\/favicon\.ico"/);
+});
+
+test("page: the owner's wording for the lead, the example and the footer (hidetzu/decide-first#37)", () => {
+  const html = readFileSync("public/index.html", "utf8");
+  for (const s of [
+    "渡す前に人間が決めることを、短く示します。",
+    "例で試す: ",
+    'data-url="https://github.com/cli/cli/issues/14627">cli/cli#14627<',
+    "入力した URL の Issue を、GitHub から読むだけです。保存も書き込みもしません。public repository の Issue だけが対象です。",
+    '<a href="https://github.com/hidetzu/decide-first">GitHub</a> · <a href="https://github.com/hidetzu/decide-first/releases/tag/v0.1.0">できること・できないこと</a> · MIT License',
+  ]) assert.ok(html.includes(s), s);
 });
