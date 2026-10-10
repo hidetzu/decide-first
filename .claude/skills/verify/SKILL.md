@@ -30,6 +30,10 @@ node .claude/tools/docs-check.mjs --only=links
 lower bound) and 24:
 
 - runs: the fast tier (`npm run check`) and the docs check (`node .claude/tools/docs-check.mjs`)
+- runs on every PR: the Worker bundle (`wrangler deploy --dry-run`, no secret, uploads nothing)
+- runs on push to `main` only, after the above are green: the deploy, then `scripts/check-deploy.mjs`
+  against what is served, then the version tag (docs/adr/0010). ⚠ **A PR cannot show the deploy
+  works; only the run on `main` can.** ⚠ Say so on the PR.
 - ⚠ **does not run: the external tier.** Its result depends on GitHub being up and on the shared
   rate limit. ⚠ **Run it by hand before a PR that touches `src/github/` or `src/app.ts`, and say on
   the PR whether it ran.**

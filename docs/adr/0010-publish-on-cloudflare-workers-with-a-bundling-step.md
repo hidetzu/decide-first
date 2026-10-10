@@ -41,3 +41,13 @@
 - **IP ごとの回数制限（Workers の rate limiting）。** v1 の範囲を広げる。
 - **手での `wrangler deploy`。** 検査を通ったものだけが出る、と言えなくなる。
 - **Cloudflare の Workers Builds。** GitHub の検査の結果を待てない。
+
+## 追記: Web 版のコメントの上限（2026-10-10、hidetzu/decide-first#26）
+
+- 手元で CPU 時間を測ったところ、コメントが多い Issue では、Workers Free の上限 10 ms を超えることがあった。
+  - 測定の条件と値は、hidetzu/decide-first#26 の PR に書いた（ADR には測定値を書かない）。
+- owner の決定: **Web 版（Worker）だけ、コメントを 3 ページ（300 件）までにする。** 手元の Node サーバと CLI は今までどおり 10 ページ。
+  - 超えたときは、Cloudflare のエラー画面ではなく、既存の「コメントが N 件を超える Issue は現在対象外です」の文を返す。
+- 捨てたもの
+  - **すべてを 300 件にすること。** 手元では CPU の上限がない。
+  - **1000 件のまま公開して、ログで測ってから決めること。** 測るまでの間、大きな Issue で Cloudflare のエラー画面が出る。

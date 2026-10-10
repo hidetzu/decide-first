@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { judgeEvaluate, judgeFile, SERVED } from "../scripts/check-deploy.mjs";
 import { createHandler } from "../src/web/handler.ts";
-import worker from "../src/worker.ts";
+import worker, { WORKER_MAX_COMMENT_PAGES } from "../src/worker.ts";
+import { PER_PAGE } from "../src/github/client.ts";
 
 test("deploy: a file that could not be fetched is not called absent, and differs from a changed one", () => {
   const a = judgeFile("x", null);
@@ -61,4 +62,32 @@ test("handler: routes, with and without the public files", async () => {
   // On Workers, Cloudflare serves public/; the handler itself does not.
   const bare = createHandler({ fetch: github });
   assert.equal((await get(bare, "/")).status, 404);
+});
+
+test("worker: reads at most WORKER_MAX_COMMENT_PAGES of comments, then declines in words", async () => {
+  const pageOf = (n: number) => JSON.stringify(Array.from({ length: n }, () => ({ user: { login: "u" }, body: "x", created_at: "t" })));
+  const orig = globalThis.fetch;
+  const run = async (comments: number) => {
+    let pages = 0;
+    globalThis.fetch = (async (url: unknown) => {
+      const m = /[?&]page=(\d+)/.exec(String(url));
+      if (!m) return new Response(JSON.stringify({ title: "t", body: "b", state: "open", html_url: "u", labels: [], comments }));
+      pages++;
+      const before = (Number(m[1]) - 1) * PER_PAGE;
+      return new Response(pageOf(Math.max(0, Math.min(PER_PAGE, comments - before))));
+    }) as typeof fetch;
+    const r = await worker.fetch(new Request("https://x/api/evaluate?url=" + encodeURIComponent("https://github.com/o/r/issues/1")), {});
+    return { body: (await r.json()) as { ok: boolean; message?: string }, pages };
+  };
+  try {
+    const limit = WORKER_MAX_COMMENT_PAGES * PER_PAGE;
+    const under = await run(limit - 1);
+    assert.equal(under.body.ok, true);
+    const over = await run(limit + 1);
+    assert.equal(over.body.ok, false);
+    assert.match(over.body.message ?? "", new RegExp(`${limit} 件を超える`));
+    assert.equal(over.pages, WORKER_MAX_COMMENT_PAGES, "no page beyond the limit is fetched");
+  } finally {
+    globalThis.fetch = orig;
+  }
 });

@@ -27,6 +27,8 @@ export interface ClientOptions {
   fetch?: typeof fetch;
   token?: string;
   apiBase?: string;
+  /** Comment pages to read before declining. Defaults to MAX_COMMENT_PAGES. */
+  maxCommentPages?: number;
 }
 
 export const PER_PAGE = 100;
@@ -76,6 +78,7 @@ async function readJson<T>(res: Response, is: (v: unknown) => v is T): Promise<T
 
 export async function fetchIssue(ref: IssueRef, opts: ClientOptions = {}): Promise<FetchResult> {
   const doFetch = opts.fetch ?? fetch;
+  const maxPages = opts.maxCommentPages ?? MAX_COMMENT_PAGES;
   const base = opts.apiBase ?? "https://api.github.com";
   const headers: Record<string, string> = {
     accept: "application/vnd.github+json",
@@ -111,7 +114,7 @@ export async function fetchIssue(ref: IssueRef, opts: ClientOptions = {}): Promi
   const comments: IssueSnapshot["comments"] = [];
   if (issue.comments > 0) {
     for (let page = 1; ; page++) {
-      if (page > MAX_COMMENT_PAGES) return { ok: false, kind: "too_many_comments", limit: MAX_COMMENT_PAGES * PER_PAGE };
+      if (page > maxPages) return { ok: false, kind: "too_many_comments", limit: maxPages * PER_PAGE };
       const res = await get(`${path}/comments?per_page=${PER_PAGE}&page=${page}`);
       if (!(res instanceof Response)) return res;
       const batch = await readJson(res, isApiComments);

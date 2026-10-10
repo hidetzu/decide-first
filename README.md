@@ -48,6 +48,13 @@ node src/cli.ts https://github.com/owner/repo/issues/123   # exit 0 = READY
 
 `GITHUB_TOKEN` を設定すると API の rate limit が上がります。読む範囲は変わりません。
 
+### Web 版（Cloudflare Workers）
+
+main に merge すると、検査がすべて通ったあとに GitHub Actions が Cloudflare Workers へ公開します（[docs/adr/0010](docs/adr/0010-publish-on-cloudflare-workers-with-a-bundling-step.md)）。
+
+- Web 版で読むコメントは 300 件までです。Workers Free の CPU 時間の上限に収めるためで、手元の `npm start` と CLI は 1000 件まで読みます。
+- 公開されたものが手元と同じかは `node scripts/check-deploy.mjs --origin=<公開 URL>` で確かめられます。
+
 ## 現在の check
 
 | Check | 何を見るか |
