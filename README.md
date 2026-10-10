@@ -78,6 +78,7 @@ main に merge すると、検査がすべて通ったあとに GitHub Actions �
 
 - 進め方は [CLAUDE.md](CLAUDE.md) と [.claude/rules/](.claude/rules/README.md)。[hidetzu/claude-dev-template](https://github.com/hidetzu/claude-dev-template) を元にしています。
 - 検証は `npm run check` と `node .claude/tools/docs-check.mjs`（[verify](.claude/skills/verify/SKILL.md)）。
+- 脆弱性の報告は、公開の Issue ではなく [SECURITY.md](SECURITY.md) の方法でお願いします。
 
 ## ライセンス
 
