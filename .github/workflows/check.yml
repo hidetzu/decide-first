@@ -1,0 +1,31 @@
+# The fast tier and the docs check, on every PR and on main (.claude/skills/verify/SKILL.md).
+# ⚠ The external tier (node src/cli.ts against GitHub's real API) is not run here: its result
+#   depends on GitHub being up and on the shared rate limit, so it cannot assert our correctness
+#   (.claude/rules/verification.md).
+name: check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The lower bound of package.json "engines", and the current LTS.
+        node: ["22.18", "24"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: node .claude/tools/docs-check.mjs

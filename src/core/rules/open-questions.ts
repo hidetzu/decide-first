@@ -10,8 +10,9 @@ const MARKER = /\bTBD\b|\bTBC\b|未定|要検討|要確認|要相談/;
 export const openQuestions: Check = {
   id: "open-questions",
   label: "No open decisions",
+  kind: "blocking",
   run(issue) {
-    const base = { id: this.id, label: this.label, source: "rule" as const };
+    const base = { id: this.id, label: this.label, kind: this.kind, source: "rule" as const };
     const label = issue.labels.find((l) => LABELS.includes(l.toLowerCase()));
     if (label) {
       return { ...base, status: "missing", evidence: `ラベル「${label}」が付いています`, decision: `ラベル「${label}」が示す未決事項への結論` };

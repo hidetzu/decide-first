@@ -10,8 +10,9 @@ const TASK = /^\s*[-*+]\s+\[[ xX]\]\s+\S/;
 export const acceptanceCriteria: Check = {
   id: "acceptance-criteria",
   label: "Acceptance criteria",
+  kind: "blocking",
   run(issue) {
-    const base = { id: this.id, label: this.label, source: "rule" as const };
+    const base = { id: this.id, label: this.label, kind: this.kind, source: "rule" as const };
     const sec = findSection(issue, NAMES);
     if (sec) return { ...base, status: "met", evidence: `${sec.where}の見出し「${sec.heading}」` };
     const task = firstLine(issue, TASK);

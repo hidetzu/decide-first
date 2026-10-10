@@ -16,13 +16,17 @@ export function stripComments(text: string): string {
   return text.replace(/<!--[\s\S]*?(?:-->|$)/g, "");
 }
 
-/** True when a section holds something a person wrote, not just template scaffolding. */
-export function hasContent(content: string): boolean {
-  const lines = stripComments(content)
+/** The lines a person wrote: no HTML comments, blank lines or `_No response_`. */
+function writtenLines(text: string): string[] {
+  return stripComments(text)
     .split("\n")
     .map((l) => l.trim())
     .filter((l) => l !== "" && !NO_RESPONSE.test(l));
-  return lines.length > 0;
+}
+
+/** True when a section holds something a person wrote, not just template scaffolding. */
+export function hasContent(content: string): boolean {
+  return writtenLines(content).length > 0;
 }
 
 // `## Heading`, or a line that is only bold text: `**Heading**` / `**Heading:**`.
@@ -48,6 +52,22 @@ export function sections(body: string): Section[] {
   }
   if (current) out.push({ heading: current.heading, content: current.lines.join("\n") });
   return out;
+}
+
+/**
+ * The first line a person wrote that is not a heading, or null when the text is only template
+ * scaffolding (headings, HTML comments, `_No response_`). ⚠ Code blocks count as written.
+ */
+export function firstWrittenLine(text: string): string | null {
+  let inFence = false;
+  for (const line of writtenLines(text)) {
+    if (FENCE.test(line)) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence || !(ATX.test(line) || BOLD_LINE.test(line))) return line;
+  }
+  return null;
 }
 
 /** Lowercases and drops punctuation so "Acceptance Criteria:" and "acceptance-criteria" match. */
