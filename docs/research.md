@@ -20,6 +20,12 @@
   - 高得点の Issue ほど merge 率が高かった観点: self-containment (+16.7%)、**scope (+16.4%)**、common task familiarity、**expected and edge behaviors (+10.7%)**、**ambiguity avoidance (+8.4%)**、actionability、localization。
   - 逆に低かった観点: reproduction steps (−11.5%)、environment setup、dependency awareness。
   - ⚠ どれも相関で、因果ではない。
+  - 差の定義（2026-10-10 に原論文 v1 の本文で確認）:
+    - その観点が 4〜5 点の Issue から出た PR の merge 率から、0〜3 点の Issue から出た PR の merge 率を引いた値。
+    - 単位は明記されていない。論文中の例（77.11% と 45.91% の差を「31.2% higher」と書く）から、**ポイント差**と読める。
+    - 原論文の値は小数第 2 位まで: self-containment +16.65、scope +16.44、expected and edge behaviors +10.69、ambiguity avoidance +8.38、reproduction steps −11.53。
+    - 検定はカイ二乗（α = 0.05）。**効果量と、観点ごとの各群の件数は報告されていない。** 観点ごとに有意だったかは図にしかなく、本文からは確認できなかった。
+    - **validation guidance（検証方法）の merge 率の差は、本文に報告がない。**
 - **Ambig-SWE**（Vijayvargiya et al., arXiv:2502.13069, 2025）[論文](https://arxiv.org/html/2502.13069v2)
   - 仕様が不足した Issue では、agent がユーザーとやり取りできると成績が最大 74% 改善した。
   - モデルは促されない限りほとんど質問しない。
