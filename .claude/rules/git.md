@@ -15,17 +15,24 @@
 
 ## Permission
 
-- MUST: ⚠ **Take permission for `git push` every single time.**
-  ⚠ **Permission granted before does not carry forward.**
-  - ⚠ **One exception.** Via the Loop Controller, for **one issue that passed the quality gate**,
-    pushing to that issue's branch and **opening the PR** count as approved
-    (`.claude/skills/loop-controller/SKILL.md`).
+- MAY: ⚠ **`git push` to a working branch (`<type>/<short-name>`) needs no permission**
+  (owner decision, `docs/adr/0007`).
+  ⚠ **Grounds: a working branch can be deleted, and nothing on it reaches the default branch
+  until a merge.** ⚠ **The irreversible step is the merge, and that is where the gate stays.**
+  - MUST NOT: ⚠ **Never push to the default branch.**
+  - MUST NOT: ⚠ **Never force-push** (see below). ⚠ **Never push to a branch someone else is
+    working on without asking.**
+  - MUST: ⚠ **Before pushing, check the commits against "Never put the working environment into
+    anything public" below.** ⚠ **Once pushed, erasing a commit body needs a force push, and the
+    old SHA stays readable.**
+- MUST: ⚠ **Via the Loop Controller, for one issue that passed the quality gate, opening the PR
+  counts as approved** (`.claude/skills/loop-controller/SKILL.md`).
   - ⚠ **Merge is never included.** ⚠ **The AI enters the loop on its own** — ⚠ **it applies
     `ready-for-ai` itself** (`rules/owner-decisions.md`) — ⚠ **so the merge is where the human
     enters, and permission for it is taken every single time.**
     ⚠ **Auto-merge (`--auto`), merge queues, and merges that bypass protection (`--admin`) are
     forbidden outright.** ⚠ **Never merge on red or in-progress CI.**
-  - ⚠ **Used standalone, every skill still takes permission every time.** Nothing is weakened.
+  - ⚠ **Used standalone, every skill still takes permission for the merge every time.**
 
 ## ⚠ Never do these without being told
 

@@ -96,8 +96,8 @@ never the default branch, why and the numbers in the body. ⚠ Not here.
 
 ## 9. PR
 
-- ⚠ **Take permission for `git push` every time** ([`git.md`](../../rules/git.md)).
-  ⚠ **Permission granted before does not carry forward**
+- `git push` to the working branch needs no permission ([`git.md`](../../rules/git.md)).
+  ⚠ **Never to the default branch, never forced, and check the commits for what never goes public first**
 - Include `Closes #<N>`
 - ⚠ **Note which checks did not run on this PR**, and watch the run on the default branch after merge
 

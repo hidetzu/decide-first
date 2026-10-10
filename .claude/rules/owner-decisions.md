@@ -63,8 +63,9 @@ now      AI applies ready-for-ai     ->  ... -> PR                ->  ⚠ human 
 - MUST: ⚠ **The merge is where it sits because that is the point that cannot be walked back.**
   ⚠ **Applying a label can be.** ⚠ **The gate moved from the reversible end to the irreversible
   one; it was not removed.**
-- MUST: ⚠ **`git push` and opening the PR are covered inside the Loop Controller and nowhere
-  else** ([`git.md`](git.md)). ⚠ **Merge never is.**
+- MUST: ⚠ **Opening the PR is covered inside the Loop Controller and nowhere else**
+  ([`git.md`](git.md)). ⚠ **`git push` to a working branch needs no permission anywhere**
+  (`git.md`, `docs/adr/0007`). ⚠ **Merge never is.**
 
 ### ⚠ When the AI may apply it
 
