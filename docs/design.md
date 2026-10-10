@@ -28,7 +28,7 @@
 | Acceptance criteria — 中身のある見出し、または task list | blocking | ✅ slice | Copilot docs、Sayagh "expected behaviors" |
 | Verification — 確認方法・再現手順の見出し | blocking | ✅ slice | Sayagh "validation guidance"、Devin docs |
 | No open decisions — `question` / `needs-info` 等のラベル、TBD / 未定 の記述 | blocking | ✅ slice | Ambig-SWE、Sayagh "ambiguity avoidance" |
-| Goal / problem — 何を達成するかの記述 | blocking | 次 | Copilot docs、SWE-bench underspecification |
+| Goal / problem — 何を達成するかの記述 | blocking | ✅ hidetzu/decide-first#2 | Copilot docs、SWE-bench underspecification |
 | Scope / Out of scope | blocking | 次 | Sayagh scope (+16.4%) |
 | 名指しされた依存（`blocked by owner/repo#N`）が open | blocking | 次 | 依存が閉じていないと、始められても終わらない |
 | Issue が closed | structural → NOT READY | ✅ hidetzu/decide-first#1 | 閉じた仕事は渡すものではない |

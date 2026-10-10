@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { acceptanceCriteria } from "../src/core/rules/acceptance-criteria.ts";
+import { goal } from "../src/core/rules/goal.ts";
 import { verification } from "../src/core/rules/verification.ts";
 import { openQuestions } from "../src/core/rules/open-questions.ts";
 import { comment, issue } from "./helpers.ts";
@@ -61,4 +62,37 @@ test("open-questions: TBD / 未定 in prose is an open decision, quoted in the d
 test("open-questions: markers inside code or HTML comments are not findings", () => {
   assert.equal(openQuestions.run(issue({ body: "```\n// TBD\n```\n<!-- TBD -->\nok" })).status, "met");
   assert.equal(openQuestions.run(issue({ body: "the TBDX flag" })).status, "met");
+});
+
+test("goal: met by a non-empty Goal heading, and the evidence names it", () => {
+  const r = goal.run(issue({ body: "## Goal\nログイン失敗時に理由を表示する" }));
+  assert.equal(r.status, "met");
+  assert.match(r.evidence, /「Goal」/);
+});
+
+test("goal: met by an issue-form heading such as Describe the bug", () => {
+  assert.equal(goal.run(issue({ body: "### Describe the bug\nクラッシュする" })).status, "met");
+});
+
+test("goal: an empty Goal heading is missing, with a decision and the owner's guidance", () => {
+  const r = goal.run(issue({ body: "## Goal\n<!-- -->" }));
+  assert.equal(r.status, "missing");
+  assert.equal(r.decision, "この Issue で達成すること（1 文で）");
+  assert.deepEqual(r.guidance, {
+    grounds: "研究の数値はありません。",
+    source: "GitHub Copilot のガイドが、解く問題の明確な説明を最初に求めている",
+    example: "## Goal\n<この Issue で達成すること（1 文で）>",
+  });
+  assert.doesNotMatch(`${r.guidance!.grounds} ${r.guidance!.source}`, /[\d%]/);
+});
+
+test("goal: found in a comment, and the evidence names the comment", () => {
+  const r = goal.run(issue({ body: "x", comments: [comment("## Goal\nfix it", "alice")] }));
+  assert.equal(r.status, "met");
+  assert.match(r.evidence, /コメント \(@alice\)/);
+});
+
+test("goal: Goals and non-goals counts, Goalkeeper does not", () => {
+  assert.equal(goal.run(issue({ body: "## Goals and non-goals\nship X, not Y" })).status, "met");
+  assert.equal(goal.run(issue({ body: "## Goalkeeper\nnot a goal" })).status, "missing");
 });
