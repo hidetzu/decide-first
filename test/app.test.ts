@@ -38,6 +38,11 @@ test("server: GET / serves the page, /view.js its view module; /api/evaluate ret
     assert.equal(view.status, 200);
     assert.match(view.headers.get("content-type") ?? "", /^text\/javascript/);
     assert.match(await view.text(), /export function renderEvaluation/);
+    for (const [path, type] of [["/icon.svg", "image/svg+xml"], ["/favicon.ico", "image/x-icon"], ["/og.png", "image/png"]]) {
+      const r = await fetch(base + path);
+      assert.equal(r.status, 200, path);
+      assert.equal(r.headers.get("content-type"), type, path);
+    }
     const ok = await fetch(base + "/api/evaluate?url=" + encodeURIComponent("https://github.com/o/r/issues/5"));
     assert.equal(ok.status, 200);
     assert.equal((await ok.json()).evaluation.verdict, "READY");

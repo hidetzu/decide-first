@@ -4,6 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Decide First</title>
+<meta name="description" content="この GitHub Issue を AI Coding Agent へ渡して大丈夫か？渡す前に人間が決めることを、短く示します。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Decide First">
+<meta property="og:description" content="この GitHub Issue を AI Coding Agent へ渡して大丈夫か？渡す前に人間が決めることを、短く示します。">
+<meta property="og:url" content="https://decide-first.hidetzu.work/">
+<meta property="og:image" content="https://decide-first.hidetzu.work/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <style>
   :root {
     --bg: #fafaf9; --fg: #1c1917; --muted: #57534e; --line: #e7e5e4; --card: #ffffff;
@@ -52,17 +62,29 @@
   .example { margin: 6px 0 0; padding: 8px 10px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
              font: .8rem/1.5 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
   .error { color: var(--not); }
+  /* Example, footer (owner's wording on hidetzu/decide-first#37). */
+  .try { margin: 8px 0 0; font-size: .85rem; color: var(--muted); }
+  .linkish { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; text-decoration: underline; cursor: pointer; }
+  .linkish:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+  footer.site { margin-top: 40px; padding-top: 12px; border-top: 1px solid var(--line); font-size: .8rem; color: var(--muted); }
+  footer.site p { margin: 0 0 4px; }
+  footer.site a { color: var(--accent); }
 </style>
 </head>
 <body>
 <main>
   <h1>Decide First</h1>
-  <p class="lead">この GitHub Issue を AI Coding Agent へ渡して大丈夫か？</p>
+  <p class="lead">この GitHub Issue を AI Coding Agent へ渡して大丈夫か？渡す前に人間が決めることを、短く示します。</p>
   <form id="form">
     <input id="url" type="url" required placeholder="https://github.com/owner/repo/issues/123" aria-label="GitHub Issue URL">
     <button id="go" type="submit">判定</button>
   </form>
+  <p class="try">例で試す: <button type="button" class="linkish" id="example" data-url="https://github.com/cli/cli/issues/14627">cli/cli#14627</button></p>
   <div id="result" aria-live="polite"></div>
+  <footer class="site">
+    <p>入力した URL の Issue を、GitHub から読むだけです。保存も書き込みもしません。public repository の Issue だけが対象です。</p>
+    <p><a href="https://github.com/hidetzu/decide-first">GitHub</a> · <a href="https://github.com/hidetzu/decide-first/releases/tag/v0.1.0">できること・できないこと</a> · MIT License</p>
+  </footer>
 </main>
 <script type="module">
   import { renderEvaluation } from "/view.js";
@@ -74,6 +96,12 @@
   };
   const form = document.getElementById("form"), input = document.getElementById("url");
   const go = document.getElementById("go"), out = document.getElementById("result");
+
+  // "例で試す": put the example URL in the box and judge it, as if typed.
+  document.getElementById("example").addEventListener("click", (ev) => {
+    input.value = ev.currentTarget.dataset.url;
+    form.requestSubmit();
+  });
 
   form.addEventListener("submit", async (ev) => {
     ev.preventDefault();
