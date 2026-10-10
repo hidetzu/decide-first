@@ -11,3 +11,9 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    ignore:
+      # ⚠ @types/node follows the lower bound of package.json "engines" (Node 22.18), not the
+      #   newest Node: with newer types, tsc stops noticing an API that Node 22 lacks. Raise it
+      #   together with "engines" (owner decision on hidetzu/decide-first#35, 2026-10-10).
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
