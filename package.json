@@ -1,5 +1,5 @@
 {
-  "name": "issue-ready",
+  "name": "decide-first",
   "version": "0.1.0",
   "private": true,
   "description": "Judges whether one GitHub issue can be handed to an AI coding agent right now, and what a human still has to decide.",
