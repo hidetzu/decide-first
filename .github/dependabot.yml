@@ -1,0 +1,13 @@
+# Updates as PRs, once a month (owner decision on hidetzu/decide-first#32).
+# ⚠ Actions are pinned to a commit SHA (test/deploy.test.ts): without this, nothing says when a
+#   pinned action falls behind. Dependabot rewrites the SHA and the version comment together.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
