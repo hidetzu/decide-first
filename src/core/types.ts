@@ -26,10 +26,18 @@ export interface IssueSnapshot {
 
 export type CheckStatus = "met" | "missing";
 
+/**
+ * What a missing result means for the verdict (docs/design.md §2).
+ * blocking: a human can answer it, then hand the issue over -> NEEDS_CLARIFICATION.
+ * structural: answering is not enough; the issue itself has to be reopened or rewritten -> NOT_READY.
+ */
+export type CheckKind = "blocking" | "structural";
+
 export interface CheckResult {
   id: string;
   /** Short name shown in the detail list, e.g. "Acceptance criteria". */
   label: string;
+  kind: CheckKind;
   status: CheckStatus;
   /** Where it was found, or what was looked for and not found. ⚠ Always set: it is the "why". */
   evidence: string;
@@ -46,7 +54,11 @@ export interface Evaluation {
   title: string;
   verdict: Verdict;
   checks: CheckResult[];
-  /** The decisions left to a human, in check order. Empty exactly when verdict is READY. */
+  /**
+   * The decisions left to a human, in check order. Empty exactly when verdict is READY.
+   * ⚠ For NOT_READY, only the structural ones: asking for acceptance criteria on a closed issue is
+   *   noise (owner decision, docs/adr/0006).
+   */
   decisions: string[];
 }
 
@@ -54,5 +66,6 @@ export interface Evaluation {
 export interface Check {
   id: string;
   label: string;
+  kind: CheckKind;
   run(issue: IssueSnapshot): CheckResult;
 }

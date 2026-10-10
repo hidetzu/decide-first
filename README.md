@@ -40,8 +40,10 @@ node src/cli.ts https://github.com/owner/repo/issues/123   # exit 0 = READY
 | Acceptance criteria | 中身のある「Acceptance Criteria / Expected behavior / 受け入れ条件 …」見出し、または task list（`- [ ]`） |
 | Verification | 中身のある「Verify / How to test / 確認方法 / 再現手順 …」見出し |
 | No open decisions | `question` / `needs-info` 等のラベル、または TBD / 未定 等の記述 |
+| Issue is open | Issue が closed なら 🔴 NOT READY |
+| Body | 本文が空、または見出しと HTML コメントだけなら 🔴 NOT READY |
 
-本文とコメントの両方を見ます。旧名は IssueReady です（[docs/adr/0005](docs/adr/0005-renamed-to-decide-first-and-differentiated-by-always-answering.md)）。主張してよい範囲は [docs/SPEC.md](docs/SPEC.md)、今後の check は [docs/design.md](docs/design.md)、調査は [docs/research.md](docs/research.md) にあります。
+上の 3 つは本文とコメントの両方を見て、欠けていれば 🟡 NEEDS CLARIFICATION にします。Body は本文だけを見ます。旧名は IssueReady です（[docs/adr/0005](docs/adr/0005-renamed-to-decide-first-and-differentiated-by-always-answering.md)）。主張してよい範囲は [docs/SPEC.md](docs/SPEC.md)、今後の check は [docs/design.md](docs/design.md)、調査は [docs/research.md](docs/research.md) にあります。
 
 ## 開発
 
