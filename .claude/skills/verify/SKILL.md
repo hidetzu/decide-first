@@ -24,6 +24,17 @@ node .claude/tools/docs-check.mjs --only=links
 ⚠ **Counting without running:** `grep -ho '^test("[^"]*' test/*.test.ts | sort` names every case and loads nothing.
 ⚠ **The runner announces the count** (`ℹ tests N`). Copy it from there and never write it down.
 
+## ⚠ What CI runs, and what it does not
+
+`.github/workflows/check.yml` runs on every PR and on pushes to `main`, on Node 22.18 (the `engines`
+lower bound) and 24:
+
+- runs: the fast tier (`npm run check`) and the docs check (`node .claude/tools/docs-check.mjs`)
+- ⚠ **does not run: the external tier.** Its result depends on GitHub being up and on the shared
+  rate limit. ⚠ **Run it by hand before a PR that touches `src/github/` or `src/app.ts`, and say on
+  the PR whether it ran.**
+- ⚠ **does not run: UI rendering** (no case asserts it; see below).
+
 ## ⚠ Notes
 
 - The external tier makes unauthenticated GETs (60/h per IP). Set `GITHUB_TOKEN` to raise the limit; ⚠ it never widens what is read.
